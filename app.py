@@ -7,7 +7,8 @@ from flask_socketio import SocketIO
 from server import state
 from server.mediascan import load_config, save_config
 from server.transcodate import detect_available_accelerators
-from server.db import init_db
+from alembic.config import Config as AlembicConfig
+from alembic import command as alembic_command
 
 CONFIG_FILE = os.environ.get('MCTL_CONFIG', 'data/config.json')
 
@@ -26,7 +27,8 @@ state.CONFIG_FILE = CONFIG_FILE
 state.socketio = socketio
 state.available_accelerators = detect_available_accelerators()
 
-init_db()
+alembic_cfg = AlembicConfig('alembic.ini')
+alembic_command.upgrade(alembic_cfg, 'head')
 
 from server.routes.auth import bp as auth_bp
 from server.routes.media import bp as media_bp
