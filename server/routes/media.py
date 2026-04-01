@@ -61,6 +61,8 @@ def single_media():
     if not path:
         return 'Path not provided', 400
     media_file = get_single_media_by_path(unquote(path))
+    if media_file is None:
+        return 'File not found', 404
     return render_template('single.html', file=media_file, accelerators=state.available_accelerators)
 
 

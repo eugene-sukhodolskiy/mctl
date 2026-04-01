@@ -47,10 +47,13 @@
             <h2 class="h5 mb-0">// container</h2>
         </div>
         <div class="card-body">
+            {% if file.info and file.info.container %}
             <p><strong>Bitrate:</strong> {{ file.info.container.bitrate }}</p>
             <p><strong>Duration:</strong> <span class="duration-to-minutes" data-duration-in-seconds="{{ file.info.container.duration }}"></span></p>
             <p><strong>Size:</strong> {{ file.info.container.size }}</p>
-            
+            {% else %}
+            <p class="text-muted">Media info unavailable</p>
+            {% endif %}
             {% include "components/single-transcoding.html" %}
         </div>
     </div>
@@ -70,7 +73,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for video in file.info.video %}
+                    {% for video in file.info.video if file.info %}
                     <tr>
                         <td>{{ video.codec }}</td>
                         <td>{{ video.resolution }}</td>
@@ -101,7 +104,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for audio in file.info.audio %}
+                    {% for audio in file.info.audio if file.info %}
                     <tr data-track-index="{{ loop.index0 }}"
                         data-track-codec="{{ audio.codec }}"
                         data-track-title="{{ audio.title }}"
