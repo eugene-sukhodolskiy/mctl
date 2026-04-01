@@ -363,6 +363,7 @@ def restore_file_task(socketio, operation_id, backup_path, file_path, user_id=No
                     'operation_id': operation_id,
                     'percent': percent
                 })
+                socketio.sleep(0)  # yield to gevent event loop — file I/O is not patched by gevent
 
         os.replace(tmp_path, file_path)
 

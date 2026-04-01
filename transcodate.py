@@ -277,6 +277,7 @@ def _copy_with_progress(src, dst, file_path, socketio, chunk_size=2 * 1024 * 102
             copied += len(buf)
             percent = int(copied / total * 100)
             socketio.emit('copy-progress', {'file': file_path, 'percent': percent})
+            socketio.sleep(0)  # yield to gevent event loop — file I/O is not patched by gevent
 
 
 def transcode_file(transcoding_tasks, socketio, file_path, dest_path, acceleration, codec, resolution, crf, preset, cpu_used, operation_id=None, delete_original=False, user_id=None):
