@@ -803,8 +803,9 @@ h1, h2, h3, h4, h5, h6 {
     letter-spacing: 0.02em;
     flex-grow: 1;
     min-width: 0;
-    word-break: break-all;
-    overflow-wrap: anywhere;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .notif-toast-msg {

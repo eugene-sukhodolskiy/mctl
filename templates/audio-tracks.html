@@ -67,7 +67,7 @@ function loadAudioTracks() {
         empty.hide(); table.show();
         tracks.forEach(t => {
             const date = t.created_at
-                ? new Date(t.created_at + "Z").toLocaleString()
+                ? new Date(t.created_at).toLocaleString()
                 : "—";
             const filename = t.path.split("/").at(-1);
             tbody.append(`

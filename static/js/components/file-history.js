@@ -7,7 +7,7 @@ function renderHistoryItem(op, index) {
     }[op.status] || "secondary";
 
     const date = op.started_at
-        ? new Date(op.started_at + "Z").toLocaleString()
+        ? new Date(op.started_at).toLocaleString()
         : "—";
 
     let paramRows = "";
