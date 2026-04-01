@@ -23,30 +23,6 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-<script>
-function formatBytes(bytes) {
-    if (!bytes || bytes <= 0) return "0 B";
-    if (bytes >= 1099511627776) return (bytes / 1099511627776).toFixed(2) + " TB";
-    if (bytes >= 1073741824)    return (bytes / 1073741824).toFixed(2) + " GB";
-    if (bytes >= 1048576)       return (bytes / 1048576).toFixed(1) + " MB";
-    return (bytes / 1024).toFixed(0) + " KB";
-}
-
-function renderFooterStats(s) {
-    if (!s || !s.transcoded_count) return;
-    $("#stat-count").text(s.transcoded_count);
-    $("#stat-saved").text(formatBytes(s.saved_bytes));
-    $("#stat-percent").text(s.percent_saved + "%");
-    $("#footer-stats").show();
-}
-
-$(document).ready(function() {
-    $.getJSON("/stats", function(s) { renderFooterStats(s); });
-
-    socket.on("completed", function(data) {
-        if (data.stats) renderFooterStats(data.stats);
-    });
-});
-</script>
+<script src="/static/js/pages/footer.js" defer></script>
 </body>
 </html>

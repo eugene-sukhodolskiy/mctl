@@ -1,5 +1,3 @@
-const socket = io();
-
 function makeProgressBar(props) {
 	let html = `<svg viewBox="0 0 ${props.size} ${props.size}" class="progress-circle" width="${props.size}" height="${props.size}">
     <!-- Фон круга -->
