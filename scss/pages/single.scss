@@ -1,38 +1,38 @@
 #page-single {
 	.file-title-row {
-		display: flex;
-		align-items: center;
-		gap: 8px;
+		.file-title-display {
+			display: flex;
+			align-items: center;
+			gap: 8px;
 
-		.file-title {
-			margin: 0;
+			.file-title {
+				margin: 0;
+				min-width: 0;
+			}
+
+			.file-title-edit-btn {
+				flex-shrink: 0;
+				opacity: 0.4;
+				transition: opacity 0.15s;
+
+				&:hover {
+					opacity: 1;
+				}
+			}
 		}
 
 		.file-title-edit {
 			display: flex;
 			align-items: center;
 			gap: 6px;
-			flex: 1;
 
 			.file-title-input {
+				flex: 1;
+				min-width: 0;
 				font-size: 1.75rem;
 				font-weight: 700;
 				padding: 2px 10px;
 				height: auto;
-			}
-
-			.file-title-confirm {
-				flex-shrink: 0;
-			}
-		}
-
-		.file-title-edit-btn {
-			flex-shrink: 0;
-			opacity: 0.4;
-			transition: opacity 0.15s;
-
-			&:hover {
-				opacity: 1;
 			}
 		}
 	}

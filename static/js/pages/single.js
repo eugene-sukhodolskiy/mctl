@@ -1,11 +1,12 @@
 // ─── Rename ───────────────────────────────────────────────────────────────────
 
 function initRename() {
-    const display  = $('#file-title-display');
-    const editRow  = $('#file-title-edit');
-    const input    = $('#file-title-input');
+    const display    = $('#file-title-display');
+    const editRow    = $('#file-title-edit');
+    const input      = $('#file-title-input');
     const confirmBtn = $('#file-title-confirm');
-    const editBtn  = $('#btn-rename-file');
+    const cancelBtn  = $('#file-title-cancel');
+    const editBtn    = $('#btn-rename-file');
 
     function enterEdit() {
         display.hide();
@@ -52,6 +53,7 @@ function initRename() {
 
     editBtn.on('click', enterEdit);
     confirmBtn.on('click', submitRename);
+    cancelBtn.on('click', exitEdit);
     input.on('keydown', function(e) {
         if (e.key === 'Enter') submitRename();
         if (e.key === 'Escape') exitEdit();

@@ -4,17 +4,22 @@
 
 <div class="container mt-2" id="page-single">
     <div class="file-title-row mb-3">
-        <h1 class="file-title" id="file-title-display">{{ file.name }}</h1>
+        <div class="file-title-display" id="file-title-display">
+            <h1 class="file-title">{{ file.name }}</h1>
+            <button class="btn btn-outline-secondary file-title-edit-btn" id="btn-rename-file" title="rename">
+                <i class="bi bi-pencil"></i>
+            </button>
+        </div>
         <div class="file-title-edit" id="file-title-edit" style="display:none">
             <input type="text" class="form-control file-title-input" id="file-title-input" value="{{ file.name }}">
-            <button class="btn btn-outline-secondary file-title-confirm" id="file-title-confirm" title="confirm rename">
+            <button class="btn btn-outline-secondary" id="file-title-confirm" title="confirm rename">
                 <span class="spinner-border spinner-border-sm" style="display:none"></span>
                 <i class="bi bi-arrow-right"></i>
             </button>
+            <button class="btn btn-outline-secondary" id="file-title-cancel" title="cancel">
+                <i class="bi bi-x-lg"></i>
+            </button>
         </div>
-        <button class="btn btn-outline-secondary file-title-edit-btn" id="btn-rename-file" title="rename">
-            <i class="bi bi-pencil"></i>
-        </button>
     </div>
     <p class="text-muted" id="file-path-display">Path: {{ file.path }}</p>
     <div class="d-flex align-items-center gap-2 mb-4">
