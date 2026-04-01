@@ -1,10 +1,10 @@
 import subprocess
 import os
 import glob
-from db import update_operation, update_file_media_info, get_operation_by_id, mark_backup_deleted, get_file_by_path, calculate_and_save_stats
-from mediascan import get_media_info_with_ffprobe
-from thumbnails import invalidate_thumbs
-from notifications import notify
+from .db import update_operation, update_file_media_info, get_operation_by_id, mark_backup_deleted, get_file_by_path, calculate_and_save_stats
+from .mediascan import get_media_info_with_ffprobe
+from .thumbnails import invalidate_thumbs
+from .notifications import notify
 
 
 def detect_available_accelerators():

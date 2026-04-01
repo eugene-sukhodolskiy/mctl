@@ -1,7 +1,7 @@
 import os
 import subprocess
-from db import AUDIO_CODEC_EXT, create_audio_track, create_operation, update_operation, get_file_by_path
-from notifications import notify
+from .db import AUDIO_CODEC_EXT, create_audio_track, create_operation, update_operation, get_file_by_path
+from .notifications import notify
 
 
 def _get_output_ext(codec):

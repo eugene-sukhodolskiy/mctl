@@ -5,14 +5,14 @@ from flask import Flask, render_template, request, jsonify, send_from_directory,
 from functools import wraps
 import os
 import json
-from mediascan import scan_medialib, load_config, save_config, get_single_media_by_path, get_media_from_db, get_media_info_with_ffprobe
-from thumbnails import get_or_generate_thumbs, invalidate_thumbs, get_thumbs_dir
-from audio import extract_audio_track, remove_audio_track, add_audio_track
-from db import init_db, get_file_by_path, create_operation, get_file_operations, get_operation_by_id, get_file_path_by_id, update_file_media_info, mark_backup_deleted, get_all_audio_tracks, get_audio_track_by_id, delete_audio_track, get_file_backup_paths, delete_file_record, get_latest_operation_by_backup_path, get_app_stats, get_users_count, create_user, get_user_by_username, get_user_by_id, update_user_password, get_notifications, get_unread_count, mark_notification_read, mark_all_notifications_read, delete_notification, delete_all_notifications
+from server.mediascan import scan_medialib, load_config, save_config, get_single_media_by_path, get_media_from_db, get_media_info_with_ffprobe
+from server.thumbnails import get_or_generate_thumbs, invalidate_thumbs, get_thumbs_dir
+from server.audio import extract_audio_track, remove_audio_track, add_audio_track
+from server.db import init_db, get_file_by_path, create_operation, get_file_operations, get_operation_by_id, get_file_path_by_id, update_file_media_info, mark_backup_deleted, get_all_audio_tracks, get_audio_track_by_id, delete_audio_track, get_file_backup_paths, delete_file_record, get_latest_operation_by_backup_path, get_app_stats, get_users_count, create_user, get_user_by_username, get_user_by_id, update_user_password, get_notifications, get_unread_count, mark_notification_read, mark_all_notifications_read, delete_notification, delete_all_notifications
 from werkzeug.security import generate_password_hash, check_password_hash
 from urllib.parse import unquote
 from flask_socketio import SocketIO
-from transcodate import transcode_file, detect_available_accelerators
+from server.transcodate import transcode_file, detect_available_accelerators
 
 
 app = Flask(__name__)
@@ -108,7 +108,7 @@ def reset_password():
         if len(password) < 6:
             return jsonify({'error': 'Password must be at least 6 characters'}), 400
         # Reset password for the superadmin (first user)
-        from db import get_connection
+        from server.db import get_connection
         with get_connection() as conn:
             row = conn.execute("SELECT id FROM users WHERE is_superadmin = 1 ORDER BY id LIMIT 1").fetchone()
         if not row:
@@ -375,7 +375,7 @@ def restore_file_task(socketio, operation_id, backup_path, file_path, user_id=No
         if fresh_info:
             update_file_media_info(file_path, os.path.getsize(file_path), fresh_info)
 
-        from notifications import notify
+        from server.notifications import notify
         notify(socketio, user_id, "success", f"Original restored: {os.path.basename(file_path)}")
         socketio.emit('restore-completed', {
             'operation_id': operation_id,
@@ -385,7 +385,7 @@ def restore_file_task(socketio, operation_id, backup_path, file_path, user_id=No
     except Exception as e:
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
-        from notifications import notify
+        from server.notifications import notify
         notify(socketio, user_id, "error", f"Restore failed: {os.path.basename(file_path)}", str(e))
         socketio.emit('restore-error', {
             'operation_id': operation_id,
@@ -446,7 +446,7 @@ def delete_file():
             os.remove(backup_path)
 
     # Delete thumbnail cache
-    from thumbnails import invalidate_thumbs
+    from server.thumbnails import invalidate_thumbs
     invalidate_thumbs(file_id)
 
     # Delete the video file itself

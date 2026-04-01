@@ -2,8 +2,8 @@ import os
 import json
 import ffmpeg
 import subprocess
-from db import upsert_file, get_all_files
-from notifications import notify
+from .db import upsert_file, get_all_files
+from .notifications import notify
 
 
 def load_config(config_file):
