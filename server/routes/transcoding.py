@@ -12,6 +12,7 @@ from server.transcodate import transcode_file
 from server.notifications import notify
 from server.routes.auth import login_required
 from server import state
+from server.utils import check_writable, check_dir_writable
 
 bp = Blueprint('transcoding', __name__)
 
@@ -68,12 +69,19 @@ def process_media():
     if state.is_file_transcoding(file_path):
         return jsonify({'error': 'File is already being transcoded'}), 409
 
+    err = check_writable(file_path)
+    if err:
+        return jsonify({'error': err}), 403
+
     if delete_original:
         dest_path = None
     else:
         dest_dir = state.config.get('transcoded_directory', 'transcoded_files')
         os.makedirs(dest_dir, exist_ok=True)
         dest_path = os.path.join(dest_dir, os.path.basename(file_path))
+        err = check_dir_writable(dest_dir)
+        if err:
+            return jsonify({'error': err}), 403
 
     operation_id = None
     db_file = get_file_by_path(file_path)
@@ -168,6 +176,13 @@ def restore_original():
     file_path = get_file_path_by_id(op['file_id'])
     if not file_path:
         return jsonify({'error': 'Original file record not found'}), 404
+    err = check_writable(backup_path)
+    if err:
+        return jsonify({'error': err}), 403
+    if os.path.exists(file_path):
+        err = check_writable(file_path)
+        if err:
+            return jsonify({'error': err}), 403
     state.socketio.start_background_task(
         target=_restore_file_task,
         socketio=state.socketio,
@@ -187,6 +202,10 @@ def delete_file():
         return jsonify({'error': 'path is required'}), 400
     if state.is_file_transcoding(file_path):
         return jsonify({'error': 'Cannot delete file while transcoding is in progress'}), 409
+    if os.path.exists(file_path):
+        err = check_writable(file_path)
+        if err:
+            return jsonify({'error': err}), 403
     db_file = get_file_by_path(file_path)
     if not db_file:
         return jsonify({'error': 'File not found in database'}), 404
@@ -214,11 +233,17 @@ def delete_backup():
         backup_path = op.get('backup_path')
         if not backup_path or not os.path.exists(backup_path):
             return jsonify({'error': 'Backup file not found'}), 404
+        err = check_writable(backup_path)
+        if err:
+            return jsonify({'error': err}), 403
         os.remove(backup_path)
         mark_backup_deleted(operation_id)
     elif direct_path:
         if not os.path.exists(direct_path):
             return jsonify({'error': 'Backup file not found'}), 404
+        err = check_writable(direct_path)
+        if err:
+            return jsonify({'error': err}), 403
         os.remove(direct_path)
     else:
         return jsonify({'error': 'operation_id or backup_path is required'}), 400

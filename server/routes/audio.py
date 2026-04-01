@@ -6,6 +6,7 @@ from server.audio import extract_audio_track, remove_audio_track, add_audio_trac
 from server.db import get_file_by_path, get_audio_track_by_id, get_all_audio_tracks, delete_audio_track
 from server.routes.auth import login_required
 from server import state
+from server.utils import check_writable, check_dir_writable
 
 bp = Blueprint('audio_routes', __name__, url_prefix='/audio')
 
@@ -26,6 +27,11 @@ def audio_extract():
         return jsonify({'error': 'Audio operations are unavailable while transcoding is in progress'}), 409
 
     output_dir = state.config.get('audio_tracks_directory', 'audio-tracks')
+    os.makedirs(output_dir, exist_ok=True)
+    err = check_dir_writable(output_dir)
+    if err:
+        return jsonify({'error': err}), 403
+
     state.socketio.start_background_task(
         target=extract_audio_track,
         socketio=state.socketio,
@@ -52,6 +58,10 @@ def audio_remove():
     if state.is_file_transcoding(file_path):
         return jsonify({'error': 'Audio operations are unavailable while transcoding is in progress'}), 409
 
+    err = check_writable(file_path)
+    if err:
+        return jsonify({'error': err}), 403
+
     state.socketio.start_background_task(
         target=remove_audio_track,
         socketio=state.socketio,
@@ -75,6 +85,10 @@ def audio_add():
         return jsonify({'error': 'audio_track_id is required'}), 400
     if state.is_file_transcoding(file_path):
         return jsonify({'error': 'Audio operations are unavailable while transcoding is in progress'}), 409
+
+    err = check_writable(file_path)
+    if err:
+        return jsonify({'error': err}), 403
 
     track = get_audio_track_by_id(audio_track_id)
     if not track or not os.path.exists(track['path']):
@@ -117,6 +131,9 @@ def audio_track_delete(track_id):
     if not track:
         return jsonify({'error': 'Track not found'}), 404
     if os.path.exists(track['path']):
+        err = check_writable(track['path'])
+        if err:
+            return jsonify({'error': err}), 403
         os.remove(track['path'])
     delete_audio_track(track_id)
     return jsonify({'status': 'deleted'})

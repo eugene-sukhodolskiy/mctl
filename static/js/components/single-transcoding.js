@@ -154,7 +154,7 @@ function singleTranscodingInit() {
         } else {
             const error = await response.json();
             runBtn.prop("disabled", false).find(".spinner-border").hide();
-            pushErrMsg(`Error: ${error.error}`);
+            pushErrMsg(error.error);
         }
     }
 
