@@ -115,6 +115,14 @@ def get_all_files():
         return list(rows) if rows else None
 
 
+def get_transcoded_file_ids():
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT DISTINCT file_id FROM operations WHERE type = 'transcoding' AND status = 'completed'"
+        ).fetchall()
+        return {row['file_id'] for row in rows}
+
+
 def create_audio_track(source_file_id, track_index, title, language, codec, bitrate, channels, path):
     now = datetime.now(timezone.utc).isoformat()
     with get_connection() as conn:

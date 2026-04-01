@@ -103,12 +103,15 @@ function renderMediaList(data) {
 			`;
 
 			const pathEncoded = encodeURIComponent(file.path);
+			const transcodedBadge = file.transcoded
+				? `<span class="badge-transcoded" title="transcoded"><i class="bi bi-check-circle-fill"></i> transcoded</span>`
+				: '';
 
 			tableBody.append(`
 				<tr>
 					<td>${index + 1}</td>
 					<td>
-						<div class="filename"><a href="/single?path=${pathEncoded}">${file.name}</a></div>
+						<div class="filename"><a href="/single?path=${pathEncoded}">${file.name}</a>${transcodedBadge}</div>
 						<div class="filepath">${file.path}</div>
 						<div class="filedetails">${details}</div>
 					</td>

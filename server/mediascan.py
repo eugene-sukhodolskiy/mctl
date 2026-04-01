@@ -2,7 +2,7 @@ import os
 import json
 import ffmpeg
 import subprocess
-from .db import upsert_file, get_all_files
+from .db import upsert_file, get_all_files, get_transcoded_file_ids
 from .notifications import notify
 
 
@@ -182,6 +182,7 @@ def get_media_from_db():
     rows = get_all_files()
     if not rows:
         return None
+    transcoded_ids = get_transcoded_file_ids()
     files = []
     for row in rows:
         media_info = json.loads(row["media_info"]) if row["media_info"] else {"error": "No info"}
@@ -193,7 +194,8 @@ def get_media_from_db():
             "size": size,
             "size_unit": size_unit,
             "size_bytes": size_bytes_str,
-            "info": media_info
+            "info": media_info,
+            "transcoded": row["id"] in transcoded_ids,
         })
     return files
 
