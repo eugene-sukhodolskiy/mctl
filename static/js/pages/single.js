@@ -33,7 +33,7 @@ function initRename() {
             success: function(resp) {
                 mediaInfo.name = resp.new_name;
                 mediaInfo.path = resp.new_path;
-                display.text(resp.new_name);
+                display.find('.file-title').text(resp.new_name);
                 $('#file-path-display').text('Path: ' + resp.new_path);
                 exitEdit();
             },

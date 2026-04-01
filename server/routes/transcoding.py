@@ -84,8 +84,10 @@ def process_media():
             return jsonify({'error': err}), 403
 
     operation_id = None
+    file_id = None
     db_file = get_file_by_path(file_path)
     if db_file:
+        file_id = db_file['id']
         snapshot = json.loads(db_file['media_info']) if db_file['media_info'] else None
         operation_id = create_operation(
             file_id=db_file['id'],
@@ -111,7 +113,8 @@ def process_media():
         cpu_used=cpu_used,
         operation_id=operation_id,
         delete_original=delete_original,
-        user_id=session.get('user_id')
+        user_id=session.get('user_id'),
+        file_id=file_id
     )
     return jsonify({'status': 'processing started', 'file': file_path}), 202
 

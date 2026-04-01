@@ -111,7 +111,7 @@ function renderMediaList(data) {
 				<tr>
 					<td>${index + 1}</td>
 					<td>
-						<div class="filename"><a href="/single?path=${pathEncoded}">${file.name}</a>${transcodedBadge}</div>
+						<div class="filename"><a href="/single?id=${file.id}">${file.name}</a>${transcodedBadge}</div>
 						<div class="filepath">${file.path}</div>
 						<div class="filedetails">${details}</div>
 					</td>

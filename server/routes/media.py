@@ -1,7 +1,6 @@
 import os
 from flask import Blueprint, render_template, request, jsonify
-from urllib.parse import unquote
-from server.mediascan import scan_medialib, get_single_media_by_path, get_media_from_db
+from server.mediascan import scan_medialib, get_single_media_by_id, get_media_from_db
 from server.db import get_latest_operation_by_backup_path
 from server.routes.auth import login_required
 from server import state
@@ -46,6 +45,7 @@ def originals_list():
             'backup_name':  fname,
             'size_bytes':   os.path.getsize(fpath),
             'started_at':   rec.get('started_at'),
+            'source_id':    rec.get('file_id'),
             'source_name':  rec.get('source_name'),
             'source_path':  rec.get('source_path'),
         })
@@ -57,10 +57,10 @@ def originals_list():
 @bp.route('/single')
 @login_required
 def single_media():
-    path = request.args.get('path', '')
-    if not path:
-        return 'Path not provided', 400
-    media_file = get_single_media_by_path(unquote(path))
+    file_id = request.args.get('id', type=int)
+    if not file_id:
+        return 'id is required', 400
+    media_file = get_single_media_by_id(file_id)
     if media_file is None:
         return 'File not found', 404
     return render_template('single.html', file=media_file, accelerators=state.available_accelerators)
@@ -69,10 +69,13 @@ def single_media():
 @bp.route('/single-json')
 @login_required
 def single_media_json():
-    path = request.args.get('path', '')
-    if not path:
-        return 'Path not provided', 400
-    return jsonify(get_single_media_by_path(unquote(path)))
+    file_id = request.args.get('id', type=int)
+    if not file_id:
+        return 'id is required', 400
+    media_file = get_single_media_by_id(file_id)
+    if media_file is None:
+        return jsonify({'error': 'File not found'}), 404
+    return jsonify(media_file)
 
 
 @bp.route('/scan-status')

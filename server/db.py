@@ -115,6 +115,12 @@ def get_all_files():
         return list(rows) if rows else None
 
 
+def get_file_by_id(file_id):
+    with get_connection() as conn:
+        row = conn.execute("SELECT * FROM files WHERE id = ?", (file_id,)).fetchone()
+        return dict(row) if row else None
+
+
 def get_transcoded_file_ids():
     with get_connection() as conn:
         rows = conn.execute(
@@ -137,7 +143,7 @@ def create_audio_track(source_file_id, track_index, title, language, codec, bitr
 def get_all_audio_tracks():
     with get_connection() as conn:
         rows = conn.execute("""
-            SELECT at.*, f.name AS source_name, f.path AS source_path
+            SELECT at.*, f.id AS source_id, f.name AS source_name, f.path AS source_path
             FROM audio_tracks at
             JOIN files f ON f.id = at.source_file_id
             ORDER BY at.created_at DESC

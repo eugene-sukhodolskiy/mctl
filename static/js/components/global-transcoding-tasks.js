@@ -51,9 +51,9 @@ function updatePageTitle() {
     document.title = `[avg ${avg}%] ${pageBaseTitle}`;
 }
 
-function createCopyTaskView(filePath) {
+function createCopyTaskView(filePath, fileId) {
 	const filename = filePath.split("/").at(-1);
-	const href = `/single?path=${encodeURIComponent(filePath)}`;
+	const href = fileId ? `/single?id=${fileId}` : `/single?path=${encodeURIComponent(filePath)}`;
 	const li = document.createElement('li');
 	li.classList.add("list-group-item", "task");
 	li.dataset.copyFile = filePath;
@@ -137,7 +137,9 @@ function initTaskView(view) {
 
 function updateExistsView(data, view) {
 	const taskContainer = $(view);
-	const href = `/single?path=${encodeURIComponent(data.task.file)}`;
+	const href = data.task.file_id
+		? `/single?id=${data.task.file_id}`
+		: `/single?path=${encodeURIComponent(data.task.file)}`;
 	const fileLink = taskContainer.find(".file a");
 
 	if(fileLink.attr("href") != href) {
@@ -167,7 +169,7 @@ function globalTranscodingTasksInit() {
 
 	socket.on("copy-progress", data => {
 		if (typeof copyTasks[data.file] === "undefined") {
-			const view = createCopyTaskView(data.file);
+			const view = createCopyTaskView(data.file, data.file_id);
 			tasksContainer.append(view);
 			copyTasks[data.file] = { view };
 			updateTasksUI();

@@ -265,7 +265,7 @@ def _run_ffmpeg_process(command, task, socketio, watch_cuda_error=False):
     return process, output_tail, cuda_error_detected
 
 
-def _copy_with_progress(src, dst, file_path, socketio, chunk_size=2 * 1024 * 1024):
+def _copy_with_progress(src, dst, file_path, socketio, file_id=None, chunk_size=2 * 1024 * 1024):
     total = os.path.getsize(src)
     copied = 0
     with open(src, 'rb') as fsrc, open(dst, 'wb') as fdst:
@@ -276,16 +276,16 @@ def _copy_with_progress(src, dst, file_path, socketio, chunk_size=2 * 1024 * 102
             fdst.write(buf)
             copied += len(buf)
             percent = int(copied / total * 100)
-            socketio.emit('copy-progress', {'file': file_path, 'percent': percent})
+            socketio.emit('copy-progress', {'file': file_path, 'file_id': file_id, 'percent': percent})
             socketio.sleep(0)  # yield to gevent event loop — file I/O is not patched by gevent
 
 
-def transcode_file(transcoding_tasks, socketio, file_path, dest_path, acceleration, codec, resolution, crf, preset, cpu_used, operation_id=None, delete_original=False, user_id=None):
+def transcode_file(transcoding_tasks, socketio, file_path, dest_path, acceleration, codec, resolution, crf, preset, cpu_used, operation_id=None, delete_original=False, user_id=None, file_id=None):
     # Phase 1: copy original to backup location
     if dest_path:
         os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-        socketio.emit('copy-progress', {'file': file_path, 'percent': 0})
-        _copy_with_progress(file_path, dest_path, file_path, socketio)
+        socketio.emit('copy-progress', {'file': file_path, 'file_id': file_id, 'percent': 0})
+        _copy_with_progress(file_path, dest_path, file_path, socketio, file_id=file_id)
 
     base, ext = os.path.splitext(file_path)
     output_file = base + '_transcoded' + ext
@@ -309,6 +309,7 @@ def transcode_file(transcoding_tasks, socketio, file_path, dest_path, accelerati
     task = {
         "id": "id_" + str(len(transcoding_tasks) + 1),
         "file": file_path,
+        "file_id": file_id,
         "output": output_file,
         "command": command,
         "process": None

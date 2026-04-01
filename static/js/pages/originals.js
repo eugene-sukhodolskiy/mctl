@@ -16,7 +16,7 @@ function loadOriginals() {
                 ? new Date(item.started_at).toLocaleString()
                 : "—";
             const sourceCell = item.source_name
-                ? `<a href="/single?path=${encodeURIComponent(item.source_path)}">${item.source_name}</a>`
+                ? `<a href="/single?id=${item.source_id}">${item.source_name}</a>`
                 : `<span class="text-muted">—</span>`;
             const restoreBtn = item.operation_id
                 ? `<button class="btn btn-outline-secondary btn-sm btn-restore-original d-inline-flex align-items-center gap-1"

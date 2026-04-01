@@ -18,7 +18,7 @@ function loadAudioTracks() {
             const filename = t.path.split("/").at(-1);
             tbody.append(`
                 <tr data-id="${t.id}">
-                    <td><a href="/single?path=${encodeURIComponent(t.source_path)}">${t.source_name}</a></td>
+                    <td><a href="/single?id=${t.source_id}">${t.source_name}</a></td>
                     <td>${t.language || "—"}</td>
                     <td>${t.codec || "—"}</td>
                     <td>${t.bitrate || "—"}</td>
