@@ -5,10 +5,7 @@
 <div class="container mt-2" id="page-single">
     <div class="file-title-row mb-3">
         <div class="file-title-display" id="file-title-display">
-            <h1 class="file-title">{{ file.name }}</h1>
-            <button class="btn btn-outline-secondary file-title-edit-btn" id="btn-rename-file" title="rename">
-                <i class="bi bi-pencil"></i>
-            </button>
+            <h1 class="file-title" id="btn-rename-file" title="click to rename">{{ file.name }}</h1>
         </div>
         <div class="file-title-edit" id="file-title-edit" style="display:none">
             <input type="text" class="form-control file-title-input" id="file-title-input" value="{{ file.name }}">

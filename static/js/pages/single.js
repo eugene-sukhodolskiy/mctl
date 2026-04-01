@@ -6,7 +6,6 @@ function initRename() {
     const input      = $('#file-title-input');
     const confirmBtn = $('#file-title-confirm');
     const cancelBtn  = $('#file-title-cancel');
-    const editBtn    = $('#btn-rename-file');
 
     function enterEdit() {
         display.hide();
@@ -16,7 +15,7 @@ function initRename() {
 
     function exitEdit() {
         editRow.hide();
-        display.css('display', 'flex');
+        display.show();
     }
 
     function submitRename() {
@@ -49,7 +48,7 @@ function initRename() {
         });
     }
 
-    editBtn.on('click', enterEdit);
+    display.on('click', enterEdit);
     confirmBtn.on('click', submitRename);
     cancelBtn.on('click', exitEdit);
     input.on('keydown', function(e) {

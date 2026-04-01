@@ -1,30 +1,16 @@
 #page-single {
 	.file-title-row {
 		.file-title-display {
-			display: flex;
-			align-items: center;
-			gap: 8px;
-
 			.file-title {
 				margin: 0;
-				min-width: 0;
-			}
-
-			.file-title-edit-btn {
-				flex-shrink: 0;
-				opacity: 0.4;
-				transition: opacity 0.15s;
-
-				&:hover {
-					opacity: 1;
-				}
+				cursor: pointer;
 			}
 		}
 
 		.file-title-edit {
 			display: flex;
 			align-items: center;
-			gap: 6px;
+			gap: 10px;
 
 			.file-title-input {
 				flex: 1;
