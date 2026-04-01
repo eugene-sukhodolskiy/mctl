@@ -310,7 +310,7 @@ def stop_transcoding():
 @app.route('/thumbnails/<int:file_id>', methods=['GET'])
 @login_required
 def thumbnails(file_id):
-    from db import get_connection
+    from server.db import get_connection
     with get_connection() as conn:
         row = conn.execute("SELECT path, media_info FROM files WHERE id = ?", (file_id,)).fetchone()
     if not row:

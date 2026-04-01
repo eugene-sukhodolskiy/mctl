@@ -159,7 +159,7 @@ def human_readable_size(size_bytes):
 
 
 def get_single_media_by_path(path):
-    from db import get_file_by_path
+    from .db import get_file_by_path
     if not os.path.exists(path):
         return None
     media_info = get_media_info_with_ffprobe(path)

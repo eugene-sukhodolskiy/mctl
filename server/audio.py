@@ -190,7 +190,7 @@ def add_audio_track(socketio, file_path, audio_track_path, video_duration, track
         os.replace(tmp_path, file_path)
         if operation_id:
             update_operation(operation_id, "completed")
-        from thumbnails import invalidate_thumbs
+        from .thumbnails import invalidate_thumbs
         if db_file:
             invalidate_thumbs(db_file["id"])
         notify(socketio, user_id, "success", f"Audio track added: {os.path.basename(file_path)}",
