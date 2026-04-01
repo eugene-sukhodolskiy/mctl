@@ -29,7 +29,7 @@ For hardware acceleration:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourname/mctl.git
+git clone https://github.com/eugene-sukhodolskiy/mctl.git
 cd mctl
 
 # 2. Create the data directory and copy the config
