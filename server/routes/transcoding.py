@@ -5,7 +5,7 @@ from urllib.parse import unquote
 from server.db import (get_file_by_path, create_operation, get_file_operations,
                        get_operation_by_id, get_file_path_by_id, update_file_media_info,
                        mark_backup_deleted, get_file_backup_paths, delete_file_record,
-                       get_connection)
+                       get_connection, rename_file_record)
 from server.mediascan import get_media_info_with_ffprobe
 from server.thumbnails import get_or_generate_thumbs, invalidate_thumbs, get_thumbs_dir
 from server.transcodate import transcode_file
@@ -248,3 +248,37 @@ def delete_backup():
     else:
         return jsonify({'error': 'operation_id or backup_path is required'}), 400
     return jsonify({'status': 'deleted'})
+
+
+@bp.route('/rename-file', methods=['POST'])
+@login_required
+def rename_file():
+    data = request.json
+    old_path = data.get('path')
+    new_name = (data.get('name') or '').strip()
+
+    if not old_path or not new_name:
+        return jsonify({'error': 'path and name are required'}), 400
+    if not os.path.exists(old_path):
+        return jsonify({'error': 'File not found'}), 404
+    if state.is_file_transcoding(old_path):
+        return jsonify({'error': 'Cannot rename file while transcoding is in progress'}), 409
+
+    old_ext = os.path.splitext(old_path)[1]
+    new_ext = os.path.splitext(new_name)[1]
+    if not new_ext:
+        new_name = new_name + old_ext
+    elif new_ext.lower() != old_ext.lower():
+        return jsonify({'error': f'Extension must remain {old_ext}'}), 400
+
+    new_path = os.path.join(os.path.dirname(old_path), new_name)
+    if os.path.exists(new_path):
+        return jsonify({'error': 'A file with that name already exists'}), 409
+
+    err = check_writable(old_path)
+    if err:
+        return jsonify({'error': err}), 403
+
+    os.rename(old_path, new_path)
+    rename_file_record(old_path, new_path, new_name)
+    return jsonify({'status': 'renamed', 'new_path': new_path, 'new_name': new_name})

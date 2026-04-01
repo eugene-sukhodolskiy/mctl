@@ -191,6 +191,15 @@ def get_file_backup_paths(file_id):
         return [row["backup_path"] for row in rows]
 
 
+def rename_file_record(old_path, new_path, new_name):
+    with get_connection() as conn:
+        conn.execute(
+            "UPDATE files SET path = ?, name = ? WHERE path = ?",
+            (new_path, new_name, old_path)
+        )
+        conn.commit()
+
+
 def delete_file_record(file_id):
     """Delete operations history and file record. Audio tracks are kept."""
     with get_connection() as conn:

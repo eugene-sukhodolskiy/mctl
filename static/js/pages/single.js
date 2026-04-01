@@ -1,4 +1,65 @@
+// ─── Rename ───────────────────────────────────────────────────────────────────
+
+function initRename() {
+    const display  = $('#file-title-display');
+    const editRow  = $('#file-title-edit');
+    const input    = $('#file-title-input');
+    const confirmBtn = $('#file-title-confirm');
+    const editBtn  = $('#btn-rename-file');
+
+    function enterEdit() {
+        display.hide();
+        editRow.show();
+        input.val(mediaInfo.name).focus().select();
+        editBtn.hide();
+    }
+
+    function exitEdit() {
+        editRow.hide();
+        display.show();
+        editBtn.show();
+    }
+
+    function submitRename() {
+        const newName = input.val().trim();
+        if (!newName || newName === mediaInfo.name) { exitEdit(); return; }
+
+        confirmBtn.prop('disabled', true).find('.spinner-border').show();
+        confirmBtn.find('i').hide();
+
+        $.ajax({
+            url: '/rename-file',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ path: mediaInfo.path, name: newName }),
+            success: function(resp) {
+                mediaInfo.name = resp.new_name;
+                mediaInfo.path = resp.new_path;
+                display.text(resp.new_name);
+                $('#file-path-display').text('Path: ' + resp.new_path);
+                exitEdit();
+            },
+            error: function(xhr) {
+                pushErrMsg('Rename failed: ' + (xhr.responseJSON?.error || 'unknown error'));
+                exitEdit();
+            },
+            complete: function() {
+                confirmBtn.prop('disabled', false).find('.spinner-border').hide();
+                confirmBtn.find('i').show();
+            }
+        });
+    }
+
+    editBtn.on('click', enterEdit);
+    confirmBtn.on('click', submitRename);
+    input.on('keydown', function(e) {
+        if (e.key === 'Enter') submitRename();
+        if (e.key === 'Escape') exitEdit();
+    });
+}
+
 $(document).ready(function() {
+    initRename();
     const deleteFileModal = new bootstrap.Modal(document.getElementById("confirm-delete-file"));
 
     let deleteFileLocked = false;
