@@ -772,13 +772,13 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid var(--tn-border);
   border-left: 3px solid var(--notif-color, var(--tn-blue));
   border-radius: 6px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
+  padding: 13px 15px;
+  margin-bottom: 10px;
   opacity: 0;
   transform: translateX(16px);
   transition: opacity 0.25s, transform 0.25s;
-  max-width: 440px;
-  font-size: 0.83rem;
+  max-width: 550px;
+  font-size: 1.04rem;
 
   &.show {
     opacity: 1;
@@ -788,13 +788,14 @@ h1, h2, h3, h4, h5, h6 {
   .notif-toast-header {
     display: flex;
     align-items: flex-start;
-    gap: 7px;
+    gap: 9px;
   }
 
   .notif-toast-icon {
     color: var(--notif-color, var(--tn-blue));
     flex-shrink: 0;
-    font-size: 0.9rem;
+    font-size: 1.125rem;
+    margin-top: 1px;
   }
 
   .notif-toast-title {
@@ -803,22 +804,21 @@ h1, h2, h3, h4, h5, h6 {
     letter-spacing: 0.02em;
     flex-grow: 1;
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 
   .notif-toast-msg {
     margin-top: 6px;
     color: var(--tn-muted);
-    font-size: 0.78rem;
-    max-height: 80px;
+    font-size: 0.98rem;
+    max-height: 100px;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
-    word-break: break-all;
+    word-break: break-word;
     overflow-wrap: anywhere;
   }
 }
