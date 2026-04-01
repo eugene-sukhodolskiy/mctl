@@ -5,6 +5,20 @@ A self-hosted media library manager with hardware-accelerated transcoding, audio
 ![License](https://img.shields.io/badge/license-GPL%20v3-blue)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 
+## Demo
+
+**Authentication**
+
+![Authentication](docs/demo-auth.gif)
+
+**Media library & transcoding**
+
+![Media library and transcoding](docs/demo-transcode.gif)
+
+**Restore from backup**
+
+![Restore from backup](docs/demo-restore.gif)
+
 ## Features
 
 - **Media library browser** — scans configured directories, displays codec, resolution, bitrate, audio tracks, and file size for each file
