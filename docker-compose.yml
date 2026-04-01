@@ -1,0 +1,26 @@
+services:
+  mctl:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      MCTL_DB_PATH: /data/medialib.db
+      MCTL_CONFIG:  /data/config.json
+    volumes:
+      - ./data:/data
+      # Mount your media directories at the same path as on the host
+      # so config.json paths require no changes:
+      # - /your/media-storage:/your/media-storage
+    # AMD / Intel GPU (VAAPI, QSV)
+    devices:
+      - /dev/dri:/dev/dri
+    # NVIDIA GPU (NVENC) — requires nvidia-container-toolkit on the host:
+    #   https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped

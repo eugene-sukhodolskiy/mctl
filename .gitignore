@@ -1,0 +1,43 @@
+
+# Database
+*.db
+
+# Local config (use data/config.json or data/)
+config.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# Node
+node_modules/
+
+# Generated assets
+cache/
+thumbnails/
+static/css/main.css
+static/css/main.css.map
+
+# User data directories (configured in config.json)
+data/
+transcoded_files/
+audio-tracks/
+
+# Temp files
+.tmp
+*.restoring
+*.adding_audio
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Claude Code
+CLAUDE.md
+styleguide.md

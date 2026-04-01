@@ -1,0 +1,117 @@
+<div class="control-btns">
+    <button class="btn btn-success show-transcodate-form">Transcode</button>
+    <button class="btn btn-warning stop-transcoding" style="display: none">
+        <span class="spinner-border spinner-border-sm me-1" style="display: none"></span>
+        Stop transcoding
+    </button>
+</div>
+
+<div class="transcodate-form-container" style="display: none">
+    <div class="form-control">
+        <input type="hidden" name="path" value="{{ file.path }}">
+        <strong>{{ file.info.video[0].codec }}</strong>
+        <span class="arrow-to"> >> </span>
+        <select id="codec" name="codec" class="form-select">
+          <option value="libx265" selected>h.265 (HEVC)</option>
+          <option value="libx264">h.264 (AVC)</option>
+          <option value="libaom-av1">AV1</option>
+          <option value="libvpx-vp9">VP9</option>
+        </select>
+    </div>
+    <div class="form-control">
+        <strong>{{ file.info.video[0].resolution }}</strong>
+        <span class="arrow-to"> >> </span>
+        <select id="resolution" name="resolution" class="form-select" data-max-resolution="{{ file.info.video[0].resolution.split('x')[0] }}">
+          <option value="3840">UHD (2160p)</option>
+          <option value="2560">QHD (1440p)</option>
+          <option value="1920">FHD (1080p)</option>
+          <option value="1280">HD (720p)</option>
+          <option value="640">SD (480p)</option>
+        </select>
+    </div>
+
+    <div class="form-control">
+        <strong>Acceleration</strong>
+        <select id="acceleration" name="acceleration" class="form-select">
+          {% set labels = {"CPU": "CPU", "NVENC": "NVENC (NVIDIA)", "VAAPI": "VAAPI (Intel / AMD)", "QSV": "QSV (Intel)", "AMF": "AMF (AMD)"} %}
+          {% for key, label in labels.items() %}
+            {% if key in accelerators %}
+              <option value="{{ key }}"{% if key == "CPU" %} selected{% endif %}>{{ label }}</option>
+            {% endif %}
+          {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-control">
+        <strong>Preset</strong>
+        <select id="preset-libx" name="preset-libx" class="form-select">
+          <option value="ultrafast">Ultrafast</option>
+          <option value="superfast">Superfast</option>
+          <option value="veryfast">Veryfast</option>
+          <option value="faster">Faster</option>
+          <option value="fast" selected>Fast</option>
+          <option value="medium">Medium</option>
+          <option value="slow">Slow</option>
+          <option value="slower">Slower</option>
+          <option value="veryslow">Veryslow</option>
+        </select>
+
+        <select id="preset-vp9" name="preset-vp9" class="form-select" style="display: none">
+          <option value="0">0 — best quality (slowest)</option>
+          <option value="1" selected>1 — high quality</option>
+          <option value="2">2 — good quality</option>
+          <option value="3">3 — balanced</option>
+          <option value="4">4 — fast</option>
+          <option value="5">5 — fastest (lowest quality)</option>
+        </select>
+
+        <select id="preset-av1" name="preset-av1" class="form-select" style="display: none">
+          <option value="0">0 — best quality (slowest)</option>
+          <option value="1">1 — very high quality</option>
+          <option value="2">2 — high quality</option>
+          <option value="3" selected>3 — balanced</option>
+          <option value="4">4 — good speed</option>
+          <option value="5">5 — fast</option>
+          <option value="6">6 — faster</option>
+          <option value="7">7 — very fast</option>
+          <option value="8">8 — fastest (lowest quality)</option>
+        </select>
+    </div>
+
+    <div class="form-control">
+        <strong>{{ file.info.video[0].bitrate }}</strong>
+        <span class="arrow-to"> >> </span>
+        <div class="input-group">
+            <input type="number" id="crf" step="1" name="crf" class="form-control" placeholder="23" value="23" max="51" min="1">
+            <span class="input-group-text">CRF <span class="crf-range">0-51</span></span>
+        </div>
+    </div>
+
+    <div class="form-control">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="delete_original" id="delete_original">
+            <label class="form-check-label" for="delete_original">Don't keep backup copy</label>
+        </div>
+    </div>
+
+    <div class="btns">
+        <button class="btn btn-warning run-transcodate">
+            <span class="spinner-border spinner-border-sm me-1" style="display: none"></span>
+            Run
+        </button>
+        <button class="btn btn-outline-secondary close-transcodate-form-container">Cancel</button>
+    </div>
+</div>
+
+<div class="progress-bar-container mt-3" style="display: none">
+    <div class="d-flex justify-content-between mb-1">
+        <small class="text-muted progress-phase-label"></small>
+        <small class="text-muted progress-phase-pct"></small>
+    </div>
+    {% set bar_id = "single-transcoding-progress" %}
+    {% include "components/progress-bar-line.html" %}
+</div>
+
+<div id="progress" class="alert alert-dark" style="display: none" data-file-path="{{ file.path }}"></div>
+
+<script src="/static/js/components/single-transcoding.js" defer></script>

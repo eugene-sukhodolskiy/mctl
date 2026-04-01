@@ -1,0 +1,123 @@
+{% include "partials/head.html" %}
+
+<div class="container mt-4" style="max-width: 760px">
+    <h1 class="mb-4">// configure</h1>
+
+    <!-- Media directories -->
+    <div class="card mb-4">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <h2 class="h5 mb-0">// media directories</h2>
+            <button class="btn btn-outline-secondary btn-sm" id="btn-add-dir">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+        </div>
+        <div class="card-body">
+            <div id="directories-list" class="d-flex flex-column gap-2"></div>
+        </div>
+    </div>
+
+    <!-- Formats -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">// allowed formats</h2>
+        </div>
+        <div class="card-body">
+            <small class="text-muted d-block mb-2">comma-separated extensions, e.g. <code>.mp4, .mkv, .avi</code></small>
+            <input type="text" class="form-control" id="allowed-formats" placeholder=".mp4, .mkv, .avi">
+        </div>
+    </div>
+
+    <!-- Directories -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">// storage directories</h2>
+        </div>
+        <div class="card-body d-flex flex-column gap-3">
+            <div>
+                <label class="form-label text-muted small">audio tracks directory</label>
+                <input type="text" class="form-control" id="audio-tracks-directory">
+            </div>
+            <div>
+                <label class="form-label text-muted small">original backups directory</label>
+                <input type="text" class="form-control" id="transcoded-directory">
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-3 mb-5">
+        <button class="btn btn-primary d-inline-flex align-items-center gap-1" id="btn-save">
+            <span class="spinner-border spinner-border-sm" style="display:none"></span>
+            save
+        </button>
+        <span class="text-muted small" id="save-status" style="display:none"></span>
+    </div>
+</div>
+
+<script>
+function makeDirRow(value) {
+    const row = $(`
+        <div class="input-group dir-row">
+            <input type="text" class="form-control dir-input" value="${value}" placeholder="/path/to/directory">
+            <button class="btn btn-outline-secondary btn-remove-dir" type="button" title="remove">
+                <i class="bi bi-dash-lg"></i>
+            </button>
+        </div>
+    `);
+    row.find(".btn-remove-dir").on("click", function() {
+        row.remove();
+    });
+    return row;
+}
+
+$(document).ready(function() {
+    $.getJSON("/configure/data", function(cfg) {
+        const list = $("#directories-list");
+        (cfg.directories || []).forEach(d => list.append(makeDirRow(d)));
+        if (!cfg.directories || !cfg.directories.length) list.append(makeDirRow(''));
+
+        $("#allowed-formats").val((cfg.allowed_formats || []).join(", "));
+        $("#audio-tracks-directory").val(cfg.audio_tracks_directory || '');
+        $("#transcoded-directory").val(cfg.transcoded_directory || '');
+    });
+
+    $("#btn-add-dir").on("click", function() {
+        $("#directories-list").append(makeDirRow(''));
+        $("#directories-list .dir-input").last().focus();
+    });
+
+    $("#btn-save").on("click", function() {
+        const btn = $(this);
+        btn.prop("disabled", true).find(".spinner-border").show();
+
+        const directories = $(".dir-input").map(function() {
+            return $(this).val().trim();
+        }).get().filter(Boolean);
+
+        const payload = {
+            directories,
+            allowed_formats: $("#allowed-formats").val(),
+            audio_tracks_directory: $("#audio-tracks-directory").val().trim(),
+            transcoded_directory: $("#transcoded-directory").val().trim(),
+        };
+
+        $.ajax({
+            url: "/configure/save",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function() {
+                btn.prop("disabled", false).find(".spinner-border").hide();
+                const status = $("#save-status");
+                status.text("saved").css("color", "var(--tn-green)").show();
+                setTimeout(() => status.fadeOut(), 2500);
+            },
+            error: function(xhr) {
+                btn.prop("disabled", false).find(".spinner-border").hide();
+                pushErrMsg("Save failed: " + (xhr.responseJSON?.error || "unknown error"));
+            }
+        });
+    });
+});
+</script>
+
+{% include "partials/footer.html" %}

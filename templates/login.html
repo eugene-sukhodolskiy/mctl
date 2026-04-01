@@ -1,0 +1,68 @@
+{% include "partials/auth-head.html" %}
+
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-logo-space">
+            <img src="/static/images/logo mctl full original.webp" alt="mctl" class="auth-logo">
+        </div>
+        <div id="auth-error" class="auth-error" style="display:none"></div>
+        <form id="login-form" autocomplete="off">
+            <div class="auth-field">
+                <label for="username">username</label>
+                <input type="text" id="username" name="username" class="auth-input" autocomplete="username" autofocus>
+            </div>
+            <div class="auth-field">
+                <label for="password">password</label>
+                <div class="auth-input-wrap">
+                    <input type="password" id="password" name="password" class="auth-input" autocomplete="current-password">
+                    <button type="button" class="auth-eye-btn" id="toggle-password" tabindex="-1">
+                        <i class="bi bi-eye" id="eye-icon"></i>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" class="auth-btn" id="login-btn">login</button>
+        </form>
+    </div>
+</div>
+
+<script>
+$(document).ready(function () {
+    $("#toggle-password").on("click", function () {
+        const input = $("#password");
+        const icon = $("#eye-icon");
+        if (input.attr("type") === "password") {
+            input.attr("type", "text");
+            icon.removeClass("bi-eye").addClass("bi-eye-slash");
+        } else {
+            input.attr("type", "password");
+            icon.removeClass("bi-eye-slash").addClass("bi-eye");
+        }
+    });
+
+    $("#login-form").on("submit", function (e) {
+        e.preventDefault();
+        const btn = $("#login-btn");
+        btn.prop("disabled", true).text("...");
+        $("#auth-error").hide();
+        $.ajax({
+            url: "/login",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                username: $("#username").val().trim(),
+                password: $("#password").val()
+            }),
+            success: function () {
+                window.location.href = "/";
+            },
+            error: function (xhr) {
+                const msg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : "Login failed";
+                $("#auth-error").text(msg).show();
+                btn.prop("disabled", false).text("login");
+            }
+        });
+    });
+});
+</script>
+</body>
+</html>

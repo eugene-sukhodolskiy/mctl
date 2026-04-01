@@ -1,0 +1,22 @@
+{
+    "directories": [
+        "/media"
+    ],
+    "allowed_formats": [
+        ".mp4",
+        ".m4p",
+        ".m4v",
+        ".mkv",
+        ".webm",
+        ".flv",
+        ".vob",
+        ".ogv",
+        ".amv",
+        ".mng",
+        ".avi",
+        ".mov"
+    ],
+    "cache_dir": "/data/cache",
+    "transcoded_directory": "/data/transcoded_files",
+    "audio_tracks_directory": "/data/audio-tracks"
+}

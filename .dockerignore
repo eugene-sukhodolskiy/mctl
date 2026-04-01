@@ -1,0 +1,25 @@
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# User data
+config.json
+*.db
+cache/
+thumbnails/
+transcoded_files/
+audio-tracks/
+data/
+
+# Dev / build artifacts
+.tmp
+.git/
+.gitignore
+
+# Docs
+README.md
+CHANGELOG.md
+CLAUDE.md
+styleguide.md

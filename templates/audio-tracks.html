@@ -1,0 +1,139 @@
+{% include "partials/head.html" %}
+
+<div class="container mt-4">
+    <h1 class="mb-4">// audio tracks</h1>
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="h5 mb-0">// extracted tracks</h2>
+        </div>
+        <div class="card-body p-0">
+            <div class="audio-tracks-empty text-muted text-center py-4" style="display:none">no extracted tracks yet</div>
+            <table class="table mb-0 audio-tracks-table" style="display:none">
+                <thead>
+                    <tr>
+                        <th>file</th>
+                        <th>lang</th>
+                        <th>codec</th>
+                        <th>bitrate</th>
+                        <th>channels</th>
+                        <th>title</th>
+                        <th>created</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Delete confirmation modal -->
+<div class="modal fade" id="confirm-delete-track" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title h6 mb-0">// delete audio track</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-1">Delete <strong id="confirm-delete-filename"></strong>?</p>
+                <small class="text-muted">The file will be permanently removed from disk.</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">cancel</button>
+                <button type="button" class="btn btn-danger btn-sm" id="confirm-delete-btn">
+                    <span class="spinner-border spinner-border-sm" style="display:none"></span>
+                    delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function loadAudioTracks() {
+    $.getJSON("/audio/tracks", function(tracks) {
+        const empty = $(".audio-tracks-empty");
+        const table = $(".audio-tracks-table");
+        const tbody = table.find("tbody");
+
+        tbody.empty();
+        if (!tracks.length) {
+            empty.show(); table.hide();
+            return;
+        }
+
+        empty.hide(); table.show();
+        tracks.forEach(t => {
+            const date = t.created_at
+                ? new Date(t.created_at + "Z").toLocaleString()
+                : "—";
+            const filename = t.path.split("/").at(-1);
+            tbody.append(`
+                <tr data-id="${t.id}">
+                    <td><a href="/single?path=${encodeURIComponent(t.source_path)}">${t.source_name}</a></td>
+                    <td>${t.language || "—"}</td>
+                    <td>${t.codec || "—"}</td>
+                    <td>${t.bitrate || "—"}</td>
+                    <td>${t.channels || "—"}</td>
+                    <td>${t.title || "—"}</td>
+                    <td><small class="text-muted">${date}</small></td>
+                    <td>
+                        <button class="btn btn-outline-secondary btn-sm btn-delete-track" data-id="${t.id}">
+                            <span class="spinner-border spinner-border-sm" style="display:none"></span>
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `);
+        });
+    });
+}
+
+$(document).ready(function() {
+    loadAudioTracks();
+
+    let pendingDeleteId = null;
+    const deleteModal = new bootstrap.Modal(document.getElementById("confirm-delete-track"));
+
+    $(document).on("click", ".btn-delete-track", function() {
+        const row = $(this).closest("tr");
+        const filename = row.find("td:first a").text() || "this track";
+        pendingDeleteId = $(this).data("id");
+        $("#confirm-delete-filename").text(filename);
+        deleteModal.show();
+    });
+
+    $("#confirm-delete-btn").on("click", function() {
+        if (!pendingDeleteId) return;
+        const id = pendingDeleteId;
+        const confirmBtn = $(this);
+        confirmBtn.prop("disabled", true).find(".spinner-border").show();
+
+        $.ajax({
+            url: `/audio/tracks/${id}`,
+            method: "DELETE",
+            success: function() {
+                deleteModal.hide();
+                confirmBtn.prop("disabled", false).find(".spinner-border").hide();
+                pendingDeleteId = null;
+                loadAudioTracks();
+            },
+            error: function(xhr) {
+                confirmBtn.prop("disabled", false).find(".spinner-border").hide();
+                deleteModal.hide();
+                pendingDeleteId = null;
+                pushErrMsg("Delete failed: " + (xhr.responseJSON?.error || "unknown error"));
+            }
+        });
+    });
+
+    document.getElementById("confirm-delete-track").addEventListener("hidden.bs.modal", function() {
+        pendingDeleteId = null;
+        $("#confirm-delete-btn").prop("disabled", false).find(".spinner-border").hide();
+    });
+});
+</script>
+
+{% include "partials/footer.html" %}

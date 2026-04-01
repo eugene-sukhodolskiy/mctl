@@ -1,0 +1,296 @@
+{% include "partials/head.html" %}
+
+<script>
+    const mediaInfo = JSON.parse("{{ file }}".replaceAll("&#39;", '"').replaceAll("&#34;", "'"));
+</script>
+
+<div class="container mt-2" id="page-single">
+    <h1 class="mb-3">{{ file.name }}</h1>
+    <p class="text-muted">Path: {{ file.path }}</p>
+    <div class="d-flex align-items-center gap-2 mb-4">
+        <a href="/" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> back</a>
+        <button class="btn btn-outline-secondary ms-auto d-inline-flex align-items-center gap-1" id="btn-delete-file" title="delete file">
+            <i class="bi bi-trash"></i> delete file
+        </button>
+    </div>
+
+    <div class="thumbnails-row mb-4" data-file-id="{{ file.id }}">
+        <div class="thumb-placeholder"></div>
+        <div class="thumb-placeholder"></div>
+        <div class="thumb-placeholder"></div>
+    </div>
+
+    <!-- Lightbox -->
+    <div class="modal fade" id="thumb-lightbox" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body p-1">
+                    <img src="" class="lightbox-img w-100" style="border-radius: 6px;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Информация о контейнере -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">// container</h2>
+        </div>
+        <div class="card-body">
+            <p><strong>Bitrate:</strong> {{ file.info.container.bitrate }}</p>
+            <p><strong>Duration:</strong> <span class="duration-to-minutes" data-duration-in-seconds="{{ file.info.container.duration }}"></span></p>
+            <p><strong>Size:</strong> {{ file.info.container.size }}</p>
+            
+            {% include "components/single-transcoding.html" %}
+        </div>
+    </div>
+
+    <!-- Видео -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">// video streams</h2>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Codec</th>
+                        <th>Resolution</th>
+                        <th>Bitrate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for video in file.info.video %}
+                    <tr>
+                        <td>{{ video.codec }}</td>
+                        <td>{{ video.resolution }}</td>
+                        <td>{{ video.bitrate }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Аудио -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">// audio streams</h2>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Bitrate</th>
+                        <th>Channels</th>
+                        <th>Codec</th>
+                        <th>Lang</th>
+                        <th>Layout</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for audio in file.info.audio %}
+                    <tr data-track-index="{{ loop.index0 }}"
+                        data-track-codec="{{ audio.codec }}"
+                        data-track-title="{{ audio.title }}"
+                        data-track-language="{{ audio.language }}"
+                        data-track-bitrate="{{ audio.bitrate }}"
+                        data-track-channels="{{ audio.channels }}">
+                        <td>{{ audio.title }}</td>
+                        <td>{{ audio.bitrate }}</td>
+                        <td>{{ audio.channels }}</td>
+                        <td>{{ audio.codec }}</td>
+                        <td>{{ audio.language }}</td>
+                        <td>{{ audio.layout }}</td>
+                        <td class="audio-actions">
+                            <button class="btn btn-outline-secondary btn-sm btn-extract-audio" title="extract">
+                                <span class="spinner-border spinner-border-sm" style="display:none"></span>
+                                <i class="bi bi-box-arrow-up"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm btn-remove-audio ms-1" title="remove from video">
+                                <span class="spinner-border spinner-border-sm" style="display:none"></span>
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Delete file confirmation modal -->
+    <div class="modal fade" id="confirm-delete-file" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title h6 mb-0">// delete file</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-1">Delete <strong>{{ file.name }}</strong>?</p>
+                    <small class="text-muted">The file, all its backups, and thumbnail cache will be permanently removed. Extracted audio tracks will not be affected.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">cancel</button>
+                    <button type="button" class="btn btn-danger btn-sm d-inline-flex align-items-center gap-1" id="confirm-delete-file-btn">
+                        <span class="spinner-border spinner-border-sm" style="display:none"></span>
+                        delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete backup confirmation modal -->
+    <div class="modal fade" id="confirm-delete-backup" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title h6 mb-0">// delete backup</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-1">Delete backup <strong id="confirm-delete-backup-filename"></strong>?</p>
+                    <small class="text-muted">The original file will be permanently removed from disk.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">cancel</button>
+                    <button type="button" class="btn btn-danger btn-sm d-inline-flex align-items-center gap-1" id="confirm-delete-backup-btn">
+                        <span class="spinner-border spinner-border-sm" style="display:none"></span>
+                        delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete original confirmation modal -->
+    <div class="modal fade" id="confirm-delete-original" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title h6 mb-0">// transcode without backup</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-1">No backup copy will be created. The original <strong class="text-danger">cannot be recovered</strong> after transcoding.</p>
+                    <small class="text-muted">Make sure the transcoded result is acceptable before proceeding.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">cancel</button>
+                    <button type="button" class="btn btn-danger btn-sm d-inline-flex align-items-center gap-1" id="confirm-run-transcode-btn">
+                        <span class="spinner-border spinner-border-sm" style="display:none"></span>
+                        transcode without backup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Remove audio confirmation modal -->
+    <div class="modal fade" id="confirm-remove-audio" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title h6 mb-0">// remove audio track</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-1">Remove <strong id="confirm-remove-track-name"></strong> from this video?</p>
+                    <small class="text-muted">The audio stream will be permanently deleted from the file.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">cancel</button>
+                    <button type="button" class="btn btn-danger btn-sm d-inline-flex align-items-center gap-1" id="confirm-remove-audio-btn">
+                        <span class="spinner-border spinner-border-sm" style="display:none"></span>
+                        remove
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Добавить аудиодорожку -->
+    <div class="card mb-4" id="add-audio-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h2 class="h5 mb-0">// add audio track</h2>
+            <button class="btn btn-outline-secondary btn-sm" id="toggle-add-audio">
+                <i class="bi bi-chevron-down"></i>
+            </button>
+        </div>
+        <div class="card-body" id="add-audio-body" style="display:none">
+            <div class="d-flex align-items-center gap-2">
+                <select class="form-select" id="audio-track-select">
+                    <option value="">loading...</option>
+                </select>
+                <button class="btn btn-outline-secondary d-inline-flex align-items-center gap-1" id="btn-add-audio" disabled>
+                    <span class="spinner-border spinner-border-sm" style="display:none"></span>
+                    add
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Общая информация -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">// file info</h2>
+        </div>
+        <div class="card-body">
+            <p><strong>Size:</strong> {{ file.size }} {{ file.size_unit }}</p>
+            <p><strong>Size in Bytes:</strong> {{ file.size_bytes }}</p>
+        </div>
+    </div>
+
+    {% include "components/file-history.html" %}
+</div>
+
+<script src="/static/js/components/thumbnails.js" defer></script>
+<script src="/static/js/components/audio-controls.js" defer></script>
+<script>
+$(document).ready(function() {
+    const deleteFileModal = new bootstrap.Modal(document.getElementById("confirm-delete-file"));
+
+    let deleteFileLocked = false;
+    $.getJSON("/file-status?path=" + encodeURIComponent(mediaInfo.path), function(data) {
+        deleteFileLocked = data.transcoding;
+    });
+    socket.on("progress", function(data) { if (data.task.file === mediaInfo.path) deleteFileLocked = true; });
+    socket.on("copy-progress", function(data) { if (data.file === mediaInfo.path) deleteFileLocked = true; });
+    socket.on("completed", function(data) { if (data.task.file === mediaInfo.path) deleteFileLocked = false; });
+    socket.on("error", function(data) { if (data.task.file === mediaInfo.path) deleteFileLocked = false; });
+    socket.on("canceled", function(data) { if (data.task.file === mediaInfo.path) deleteFileLocked = false; });
+
+    $("#btn-delete-file").on("click", function() {
+        if (deleteFileLocked) {
+            pushInfoMsg("Cannot delete file while transcoding is in progress.");
+            return;
+        }
+        deleteFileModal.show();
+    });
+
+    $("#confirm-delete-file-btn").on("click", function() {
+        const btn = $(this);
+        btn.prop("disabled", true).find(".spinner-border").show();
+
+        $.ajax({
+            url: "/delete-file",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ path: mediaInfo.path }),
+            success: function() {
+                window.location.href = "/";
+            },
+            error: function(xhr) {
+                btn.prop("disabled", false).find(".spinner-border").hide();
+                deleteFileModal.hide();
+                pushErrMsg("Delete failed: " + (xhr.responseJSON?.error || "unknown error"));
+            }
+        });
+    });
+});
+</script>
+{% include "partials/footer.html" %}

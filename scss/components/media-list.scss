@@ -1,0 +1,13 @@
+.component.media-list {
+	.do-rescan-media-lib {
+		.spinner-border {
+			display: none;
+		}
+
+		&.inprogress {
+			.spinner-border {
+				display: block;
+			}
+		}
+	}
+}

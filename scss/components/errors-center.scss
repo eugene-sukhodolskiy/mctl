@@ -1,0 +1,10 @@
+.component.errors-center {
+	position: fixed;
+	bottom: 0;
+	width: 100%;
+	max-width: 500px;
+	padding: 0 20px;
+	box-sizing: border-box;
+	left: calc(50% - 250px);
+	z-index: 100;
+}

@@ -1,0 +1,17 @@
+<div class="offcanvas offcanvas-end notifications-offcanvas" tabindex="-1" id="notifications-center" aria-labelledby="notifCenterLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="notifCenterLabel">// notifications</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0 d-flex flex-column">
+        <div class="notif-toolbar d-flex gap-2 px-3 py-2">
+            <button class="btn btn-outline-secondary btn-sm" id="notif-mark-all-read">mark all read</button>
+            <button class="btn btn-outline-secondary btn-sm ms-auto" id="notif-clear-all">clear all</button>
+        </div>
+        <div id="notif-list" class="notif-list flex-grow-1 overflow-auto"></div>
+        <div id="notif-empty" class="text-muted text-center py-5 d-none">no notifications</div>
+        <div id="notif-loading" class="text-muted text-center py-5">loading...</div>
+    </div>
+</div>
+
+<script src="/static/js/components/notifications.js" defer></script>

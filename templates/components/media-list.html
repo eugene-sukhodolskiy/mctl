@@ -1,0 +1,30 @@
+<div class="component media-list">
+	<div class="control-panel">
+		<a href="/configure" class="btn btn-outline-secondary mb-4">configure</a>
+		<button id="do-rescan-media-lib" class="btn btn-outline-secondary mb-4 do-rescan-media-lib">
+			<div class="spinner-border sm-spinner" role="status"></div>
+			rescan
+		</button>
+	</div>
+
+	<div class="alert alert-dark scaning-process-container" role="alert" style="display: none"></div>
+
+	<div class="loading-spinner-container d-none">
+		<span class="loader"></span>
+	</div>
+
+	<table class="table table-striped d-none" id="media-table">
+		<thead>
+			<tr>
+				<th>#</th>
+				<th>File</th>
+				<th>Size</th>
+			</tr>
+		</thead>
+		<tbody>
+			<!-- Data will be loaded dynamically -->
+		</tbody>
+	</table>
+</div>
+
+<script src="/static/js/components/media-list.js"></script>
