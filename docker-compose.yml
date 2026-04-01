@@ -14,13 +14,5 @@ services:
     # AMD / Intel GPU (VAAPI, QSV)
     devices:
       - /dev/dri:/dev/dri
-    # NVIDIA GPU (NVENC) — requires nvidia-container-toolkit on the host:
-    #   https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+    # NVIDIA GPU (NVENC): use docker-compose.nvidia.yml override — see README
     restart: unless-stopped
