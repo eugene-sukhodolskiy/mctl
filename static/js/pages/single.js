@@ -10,15 +10,13 @@ function initRename() {
 
     function enterEdit() {
         display.hide();
-        editRow.show();
+        editRow.css('display', 'flex');
         input.val(mediaInfo.name).focus().select();
-        editBtn.hide();
     }
 
     function exitEdit() {
         editRow.hide();
-        display.show();
-        editBtn.show();
+        display.css('display', 'flex');
     }
 
     function submitRename() {
