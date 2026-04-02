@@ -118,6 +118,20 @@ def audio_add():
     return jsonify({'status': 'started'}), 202
 
 
+@bp.route('/stop', methods=['GET'])
+@login_required
+def audio_stop():
+    key = request.args.get('key', '')
+    task = state.audio_tasks.get(key)
+    if not task:
+        return jsonify({'error': 'Task not found'}), 404
+    process = task.get('process')
+    if process:
+        process.terminate()
+    del state.audio_tasks[key]
+    return jsonify({'status': 'stopped', 'key': key})
+
+
 @bp.route('/tracks', methods=['GET'])
 @login_required
 def audio_tracks_list():

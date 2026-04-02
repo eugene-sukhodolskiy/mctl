@@ -20,19 +20,40 @@ bp = Blueprint('transcoding', __name__)
 def _restore_file_task(socketio, operation_id, backup_path, file_path, user_id=None):
     CHUNK_SIZE = 1024 * 1024
     tmp_path = file_path + '.restoring'
+    db_file = get_file_by_path(file_path)
+    file_id = db_file["id"] if db_file else None
+    state.restore_tasks[operation_id] = {"canceled": False}
+    canceled = False
     try:
         total = os.path.getsize(backup_path)
         copied = 0
         with open(backup_path, 'rb') as src, open(tmp_path, 'wb') as dst:
             while True:
+                if state.restore_tasks.get(operation_id, {}).get("canceled"):
+                    canceled = True
+                    break
                 buf = src.read(CHUNK_SIZE)
                 if not buf:
                     break
                 dst.write(buf)
                 copied += len(buf)
                 percent = int(copied / total * 100)
-                socketio.emit('restore-progress', {'operation_id': operation_id, 'percent': percent})
+                socketio.emit('restore-progress', {
+                    'operation_id': operation_id,
+                    'file': file_path,
+                    'file_id': file_id,
+                    'percent': percent
+                })
                 socketio.sleep(0)
+
+        state.restore_tasks.pop(operation_id, None)
+
+        if canceled:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+            socketio.emit('restore-canceled', {'operation_id': operation_id, 'file': file_path, 'file_id': file_id})
+            return
+
         os.replace(tmp_path, file_path)
         if os.path.exists(backup_path):
             os.remove(backup_path)
@@ -41,12 +62,13 @@ def _restore_file_task(socketio, operation_id, backup_path, file_path, user_id=N
         if fresh_info:
             update_file_media_info(file_path, os.path.getsize(file_path), fresh_info)
         notify(socketio, user_id, 'success', f'Original restored: {os.path.basename(file_path)}')
-        socketio.emit('restore-completed', {'operation_id': operation_id, 'file': file_path})
+        socketio.emit('restore-completed', {'operation_id': operation_id, 'file': file_path, 'file_id': file_id})
     except Exception as e:
+        state.restore_tasks.pop(operation_id, None)
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
         notify(socketio, user_id, 'error', f'Restore failed: {os.path.basename(file_path)}', str(e))
-        socketio.emit('restore-error', {'operation_id': operation_id, 'message': str(e)})
+        socketio.emit('restore-error', {'operation_id': operation_id, 'file': file_path, 'file_id': file_id, 'message': str(e)})
 
 
 @bp.route('/process-media', methods=['POST'])
@@ -129,6 +151,16 @@ def stop_transcoding():
             task['process'].terminate()
         return jsonify({'status': 'stopped', 'task_id': task_id})
     return jsonify({'status': 'error', 'message': 'Task not found'}), 404
+
+
+@bp.route('/restore-stop', methods=['GET'])
+@login_required
+def restore_stop():
+    operation_id = request.args.get('operation_id', type=int)
+    if operation_id in state.restore_tasks:
+        state.restore_tasks[operation_id]["canceled"] = True
+        return jsonify({'status': 'stopped', 'operation_id': operation_id})
+    return jsonify({'status': 'error', 'message': 'Restore task not found'}), 404
 
 
 @bp.route('/thumbnails/<int:file_id>', methods=['GET'])

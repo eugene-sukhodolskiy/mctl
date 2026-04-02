@@ -1,4 +1,6 @@
 transcoding_tasks = {}
+audio_tasks = {}    # key: "audio-{op}:{file}:{track_index}" or "audio-add:{file}" → {"process": Popen}
+restore_tasks = {}  # key: operation_id (int) → {"canceled": bool}
 GStorage = {"scaning_state": "inaction"}
 
 # Set by app.py during startup
