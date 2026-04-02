@@ -120,14 +120,18 @@
                         <td>{{ audio.language }}</td>
                         <td>{{ audio.layout }}</td>
                         <td class="audio-actions">
-                            <button class="btn btn-outline-secondary btn-sm btn-extract-audio" title="extract">
-                                <span class="spinner-border spinner-border-sm" style="display:none"></span>
-                                <i class="bi bi-box-arrow-up"></i>
-                            </button>
-                            <button class="btn btn-outline-secondary btn-sm btn-remove-audio ms-1" title="remove from video">
-                                <span class="spinner-border spinner-border-sm" style="display:none"></span>
-                                <i class="bi bi-trash"></i>
-                            </button>
+                            <div class="audio-op-buttons d-flex align-items-center">
+                                <button class="btn btn-outline-secondary btn-sm btn-extract-audio" title="extract">
+                                    <i class="bi bi-box-arrow-up"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm btn-remove-audio ms-1" title="remove from video">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            <div class="audio-op-progress d-none align-items-center gap-2">
+                                <div class="circle-progress-bar" data-value="0" data-bar-color="#7aa2f7" data-bar-stroke="3" data-bar-size="30"></div>
+                                <small class="text-muted audio-op-percent">0%</small>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -242,9 +246,12 @@
                     <option value="">loading...</option>
                 </select>
                 <button class="btn btn-outline-secondary d-inline-flex align-items-center gap-1" id="btn-add-audio" disabled>
-                    <span class="spinner-border spinner-border-sm" style="display:none"></span>
                     add
                 </button>
+                <div id="add-audio-progress" class="d-none align-items-center gap-2">
+                    <div class="circle-progress-bar" data-value="0" data-bar-color="#9ece6a" data-bar-stroke="3" data-bar-size="30"></div>
+                    <small class="text-muted" id="add-audio-progress-label">0%</small>
+                </div>
             </div>
         </div>
     </div>

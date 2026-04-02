@@ -33,8 +33,7 @@ function audioControlsInit() {
         if (transcodingLocked) { warnTranscodingLocked(); return; }
         const btn = $(this);
         const row = btn.closest("tr");
-        btn.prop("disabled", true).find(".spinner-border").show();
-        btn.find("i").hide();
+        btn.prop("disabled", true);
 
         const trackMeta = {
             codec:    row.data("track-codec"),
@@ -54,18 +53,47 @@ function audioControlsInit() {
                 track_meta: trackMeta
             }),
             error: function(xhr) {
-                btn.prop("disabled", false).find(".spinner-border").hide();
-                btn.find("i").show();
+                btn.prop("disabled", false);
                 pushErrMsg("Extract failed: " + (xhr.responseJSON?.error || "unknown error"));
             }
         });
     });
 
+    // Initialise all circle progress bars in the audio table
+    $("tr[data-track-index] .circle-progress-bar").each(function() {
+        initSingleCircleProgressBar(this);
+    });
+    initSingleCircleProgressBar(document.querySelector("#add-audio-progress .circle-progress-bar"));
+
+    function getTrackRow(trackIndex) {
+        return $(`tr[data-track-index="${trackIndex}"]`);
+    }
+
+    function showTrackProgress(trackIndex, percent) {
+        const row = getTrackRow(trackIndex);
+        const cpbar = row.find(".circle-progress-bar")[0];
+        if (cpbar) cpbar.dataset.value = percent;
+        row.find(".audio-op-percent").text(percent + "%");
+        row.find(".audio-op-buttons").addClass("d-none");
+        row.find(".audio-op-progress").removeClass("d-none").css("display", "flex");
+    }
+
+    function hideTrackProgress(trackIndex) {
+        const row = getTrackRow(trackIndex);
+        row.find(".audio-op-progress").addClass("d-none").css("display", "");
+        row.find(".audio-op-buttons").removeClass("d-none");
+    }
+
+    socket.on("audio-extract-progress", function(data) {
+        if (data.file !== filePath) return;
+        showTrackProgress(data.track_index, data.percent);
+    });
+
     socket.on("audio-extract-completed", function(data) {
         if (data.file !== filePath) return;
-        const row = $(`tr[data-track-index="${data.track_index}"]`);
-        const btn = row.find(".btn-extract-audio");
-        btn.prop("disabled", false).find(".spinner-border").hide();
+        hideTrackProgress(data.track_index);
+        const btn = getTrackRow(data.track_index).find(".btn-extract-audio");
+        btn.prop("disabled", false);
         btn.find("i").show().removeClass("bi-box-arrow-up").addClass("bi-check-lg");
         btn.css("color", "var(--tn-green)");
         loadAudioTrackOptions();
@@ -73,19 +101,15 @@ function audioControlsInit() {
 
     socket.on("audio-extract-error", function(data) {
         if (data.file !== filePath) return;
-        const row = $(`tr[data-track-index="${data.track_index}"]`);
-        const btn = row.find(".btn-extract-audio");
-        btn.prop("disabled", false).find(".spinner-border").hide();
-        btn.find("i").show();
+        hideTrackProgress(data.track_index);
+        getTrackRow(data.track_index).find(".btn-extract-audio").prop("disabled", false);
         pushErrMsg("Extract failed: " + data.message);
     });
 
     socket.on("audio-extract-canceled", function(data) {
         if (data.file !== filePath) return;
-        const row = $(`tr[data-track-index="${data.track_index}"]`);
-        const btn = row.find(".btn-extract-audio");
-        btn.prop("disabled", false).find(".spinner-border").hide();
-        btn.find("i").show();
+        hideTrackProgress(data.track_index);
+        getTrackRow(data.track_index).find(".btn-extract-audio").prop("disabled", false);
     });
 
     // Remove audio track
@@ -134,6 +158,11 @@ function audioControlsInit() {
         $("#confirm-remove-audio-btn").prop("disabled", false).find(".spinner-border").hide();
     });
 
+    socket.on("audio-remove-progress", function(data) {
+        if (data.file !== filePath) return;
+        showTrackProgress(data.track_index, data.percent);
+    });
+
     socket.on("audio-remove-completed", function(data) {
         if (data.file !== filePath) return;
         window.location.reload();
@@ -141,15 +170,15 @@ function audioControlsInit() {
 
     socket.on("audio-remove-error", function(data) {
         if (data.file !== filePath) return;
-        const row = $(`tr[data-track-index="${data.track_index}"]`);
-        row.find(".btn-remove-audio").prop("disabled", false);
+        hideTrackProgress(data.track_index);
+        getTrackRow(data.track_index).find(".btn-remove-audio").prop("disabled", false);
         pushErrMsg("Remove failed: " + data.message);
     });
 
     socket.on("audio-remove-canceled", function(data) {
         if (data.file !== filePath) return;
-        const row = $(`tr[data-track-index="${data.track_index}"]`);
-        row.find(".btn-remove-audio").prop("disabled", false);
+        hideTrackProgress(data.track_index);
+        getTrackRow(data.track_index).find(".btn-remove-audio").prop("disabled", false);
         $("#confirm-remove-audio-btn").prop("disabled", false).find(".spinner-border").hide();
         removeModal.hide();
     });
@@ -211,6 +240,15 @@ function audioControlsInit() {
         });
     });
 
+    socket.on("audio-add-progress", function(data) {
+        if (data.file !== filePath) return;
+        const pct = data.percent;
+        const cpbar = document.querySelector("#add-audio-progress .circle-progress-bar");
+        if (cpbar) cpbar.dataset.value = pct;
+        $("#add-audio-progress-label").text(pct + "%");
+        $("#add-audio-progress").removeClass("d-none").css("display", "flex");
+    });
+
     socket.on("audio-add-completed", function(data) {
         if (data.file !== filePath) return;
         window.location.reload();
@@ -218,15 +256,15 @@ function audioControlsInit() {
 
     socket.on("audio-add-error", function(data) {
         if (data.file !== filePath) return;
-        const btn = $("#btn-add-audio");
-        btn.prop("disabled", false).find(".spinner-border").hide();
+        $("#add-audio-progress").addClass("d-none").css("display", "");
+        $("#btn-add-audio").prop("disabled", false);
         pushErrMsg("Add audio failed: " + data.message);
     });
 
     socket.on("audio-add-canceled", function(data) {
         if (data.file !== filePath) return;
-        const btn = $("#btn-add-audio");
-        btn.prop("disabled", false).find(".spinner-border").hide();
+        $("#add-audio-progress").addClass("d-none").css("display", "");
+        $("#btn-add-audio").prop("disabled", false);
     });
 }
 
