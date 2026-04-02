@@ -256,6 +256,7 @@ def _run_ffmpeg_process(command, task, socketio, watch_cuda_error=False):
                 "task": {
                     "id": task["id"],
                     "file": task["file"],
+                    "file_id": task.get("file_id"),
                     "command": task["command"]
                 },
                 "message": line.strip()
@@ -328,7 +329,7 @@ def transcode_file(transcoding_tasks, socketio, file_path, dest_path, accelerati
 
         print("NVENC CUDA filter error detected — retrying with CPU-assisted scaling")
         socketio.emit('progress', {
-            "task": {"id": task["id"], "file": task["file"], "command": fallback_command},
+            "task": {"id": task["id"], "file": task["file"], "file_id": task.get("file_id"), "command": fallback_command},
             "message": "CUDA pipeline failed — retrying with CPU-assisted scaling..."
         })
         task["command"] = fallback_command
@@ -363,6 +364,7 @@ def transcode_file(transcoding_tasks, socketio, file_path, dest_path, accelerati
             "task": {
                 "id": task["id"],
                 "file": task["file"],
+                "file_id": task.get("file_id"),
                 "command": task["command"]
             },
             "message": f"File {file_path} transcoded successfully",
@@ -380,6 +382,7 @@ def transcode_file(transcoding_tasks, socketio, file_path, dest_path, accelerati
                 "task": {
                     "id": task["id"],
                     "file": task["file"],
+                    "file_id": task.get("file_id"),
                     "command": task["command"]
                 },
                 "message": f"Transcoding failed for {file_path}",
@@ -393,6 +396,7 @@ def transcode_file(transcoding_tasks, socketio, file_path, dest_path, accelerati
                 "task": {
                     "id": task["id"],
                     "file": task["file"],
+                    "file_id": task.get("file_id"),
                     "command": task["command"]
                 },
                 "message": f"Transcoding canceled for {file_path}"

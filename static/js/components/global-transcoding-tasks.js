@@ -200,7 +200,7 @@ function updateExistsView(data, view) {
 	}
 
 	let time = getTimeFromTranscodingProgressMessage(data.message);
-	const mInf = getMediaInfo(data.task.file);
+	const mInf = getMediaInfo(data.task.file, data.task.file_id);
 
 	if(!mInf) {
 		return; // media info not yet loaded — keep showing 0%
@@ -241,16 +241,35 @@ function buildStopUrl(key, opType) {
 	return `/audio/stop?key=${encodeURIComponent(key)}`;
 }
 
+function resolveFileHref(filePath, fileId) {
+	const id = fileId || mediaInfoCenter[filePath]?.id || null;
+	return id
+		? `/single?id=${id}`
+		: `/single?path=${encodeURIComponent(filePath)}`;
+}
+
 function ensureGenericTask(tasksContainer, key, opType, filePath, fileId) {
 	if (typeof genericTasks[key] === "undefined") {
 		const color = TASK_COLORS[opType] || '#aaaaaa';
 		const label = TASK_LABELS[opType] || opType;
 		const stopUrl = buildStopUrl(key, opType);
-		const view = createProgressTaskView(key, filePath, fileId, label, color, stopUrl);
+		const resolvedId = fileId || mediaInfoCenter[filePath]?.id || null;
+		const view = createProgressTaskView(key, filePath, resolvedId, label, color, stopUrl);
 		tasksContainer.append(view);
-		genericTasks[key] = { view, file: filePath };
+		genericTasks[key] = { view, file: filePath, fileId: resolvedId };
 		updateTasksUI();
 	}
+}
+
+// Update the card link once file_id becomes known (may arrive after card creation)
+function syncGenericTaskLink(key, filePath, fileId) {
+	const entry = genericTasks[key];
+	if (!entry || entry.fileId) return; // already resolved
+	const id = fileId || mediaInfoCenter[filePath]?.id || null;
+	if (!id) return;
+	entry.fileId = id;
+	const link = entry.view.querySelector('.file a');
+	if (link) link.href = `/single?id=${id}`;
 }
 
 function removeGenericTask(key, titleKey) {
@@ -270,11 +289,17 @@ function globalTranscodingTasksInit() {
 	socket.on("copy-progress", data => {
 		const key = `copy:${data.file}`;
 		if (typeof copyTasks[data.file] === "undefined") {
-			const view = createCopyTaskView(data.file, data.file_id);
+			const resolvedId = data.file_id || mediaInfoCenter[data.file]?.id || null;
+			const view = createCopyTaskView(data.file, resolvedId);
 			view.dataset.taskKey = key;
 			tasksContainer.append(view);
-			copyTasks[data.file] = { view };
+			copyTasks[data.file] = { view, fileId: resolvedId };
 			updateTasksUI();
+		} else if (!copyTasks[data.file].fileId && data.file_id) {
+			// Update link once file_id arrives
+			copyTasks[data.file].fileId = data.file_id;
+			const link = copyTasks[data.file].view.querySelector('.file a');
+			if (link) link.href = `/single?id=${data.file_id}`;
 		}
 
 		const view = copyTasks[data.file].view;
@@ -337,6 +362,7 @@ function globalTranscodingTasksInit() {
 	socket.on("audio-extract-progress", data => {
 		const key = `audio-extract:${data.file}:${data.track_index}`;
 		ensureGenericTask(tasksContainer, key, 'audio-extract', data.file, data.file_id);
+		syncGenericTaskLink(key, data.file, data.file_id);
 		updateProgressTaskView(genericTasks[key].view, data.percent);
 		taskPercents[key] = { percent: data.percent, phase: 'extracting', file: data.file };
 		updatePageTitle();
@@ -358,6 +384,7 @@ function globalTranscodingTasksInit() {
 	socket.on("audio-remove-progress", data => {
 		const key = `audio-remove:${data.file}:${data.track_index}`;
 		ensureGenericTask(tasksContainer, key, 'audio-remove', data.file, data.file_id);
+		syncGenericTaskLink(key, data.file, data.file_id);
 		updateProgressTaskView(genericTasks[key].view, data.percent);
 		taskPercents[key] = { percent: data.percent, phase: 'removing', file: data.file };
 		updatePageTitle();
@@ -379,6 +406,7 @@ function globalTranscodingTasksInit() {
 	socket.on("audio-add-progress", data => {
 		const key = `audio-add:${data.file}`;
 		ensureGenericTask(tasksContainer, key, 'audio-add', data.file, data.file_id);
+		syncGenericTaskLink(key, data.file, data.file_id);
 		updateProgressTaskView(genericTasks[key].view, data.percent);
 		taskPercents[key] = { percent: data.percent, phase: 'adding audio', file: data.file };
 		updatePageTitle();
@@ -400,6 +428,7 @@ function globalTranscodingTasksInit() {
 	socket.on("restore-progress", data => {
 		const key = `restore:${data.operation_id}`;
 		ensureGenericTask(tasksContainer, key, 'restore', data.file, data.file_id);
+		syncGenericTaskLink(key, data.file, data.file_id);
 		updateProgressTaskView(genericTasks[key].view, data.percent);
 		taskPercents[key] = { percent: data.percent, phase: 'restoring', file: data.file };
 		updatePageTitle();
@@ -422,17 +451,19 @@ function globalTranscodingTasksInit() {
 	socket.on("medialib-scaning-complete", () => stopScanTitleAnimation());
 }
 
-function getMediaInfo(path) {
-	if(typeof mediaInfoCenter[path] == "undefined") {
-		getSingleMediaFileInfo(path, resp => {
-			console.log(resp);
-			mediaInfoCenter[resp.path] = resp;
-		});
+function getMediaInfo(path, fileId) {
+	if (typeof mediaInfoCenter[path] !== "undefined") return mediaInfoCenter[path];
 
-		return false;
-	}
+	// Prefer id-based lookup (rename-safe); fall back to path only if no id
+	const url = fileId
+		? `/single-json?id=${fileId}`
+		: `/single-json?path=${encodeURIComponent(path)}`;
 
-	return mediaInfoCenter[path];
+	$.getJSON(url, resp => {
+		if (resp && resp.path) mediaInfoCenter[resp.path] = resp;
+	});
+
+	return false;
 }
 
 $(document).ready(function() {
