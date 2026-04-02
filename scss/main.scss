@@ -559,6 +559,14 @@ h1, h2, h3, h4, h5, h6 {
   background-color: var(--tn-border);
 }
 
+.footer-version {
+  color: var(--tn-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  margin-top: 10px;
+  opacity: 0.6;
+}
+
 // Nav logo
 .nav-logo {
   height: 32px;
@@ -711,6 +719,15 @@ h1, h2, h3, h4, h5, h6 {
 
   &:hover { background-color: var(--tn-cyan); }
   &:disabled { opacity: 0.5; cursor: default; }
+}
+
+.auth-version {
+  color: var(--tn-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-align: center;
+  margin-top: 1.25rem;
+  opacity: 0.6;
 }
 
 .auth-error {

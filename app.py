@@ -44,6 +44,13 @@ app.register_blueprint(audio_bp)
 app.register_blueprint(notifications_bp)
 app.register_blueprint(config_bp)
 
+with open('VERSION') as _f:
+    _version = _f.read().strip()
+
+@app.context_processor
+def inject_version():
+    return {'version': _version}
+
 
 @socketio.on('connect')
 def handle_connect():
