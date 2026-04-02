@@ -80,6 +80,14 @@ function audioControlsInit() {
         pushErrMsg("Extract failed: " + data.message);
     });
 
+    socket.on("audio-extract-canceled", function(data) {
+        if (data.file !== filePath) return;
+        const row = $(`tr[data-track-index="${data.track_index}"]`);
+        const btn = row.find(".btn-extract-audio");
+        btn.prop("disabled", false).find(".spinner-border").hide();
+        btn.find("i").show();
+    });
+
     // Remove audio track
     let pendingRemoveRow = null;
     const removeModal = new bootstrap.Modal(document.getElementById("confirm-remove-audio"));
@@ -136,6 +144,14 @@ function audioControlsInit() {
         const row = $(`tr[data-track-index="${data.track_index}"]`);
         row.find(".btn-remove-audio").prop("disabled", false);
         pushErrMsg("Remove failed: " + data.message);
+    });
+
+    socket.on("audio-remove-canceled", function(data) {
+        if (data.file !== filePath) return;
+        const row = $(`tr[data-track-index="${data.track_index}"]`);
+        row.find(".btn-remove-audio").prop("disabled", false);
+        $("#confirm-remove-audio-btn").prop("disabled", false).find(".spinner-border").hide();
+        removeModal.hide();
     });
 
     // Add audio track panel
@@ -205,6 +221,12 @@ function audioControlsInit() {
         const btn = $("#btn-add-audio");
         btn.prop("disabled", false).find(".spinner-border").hide();
         pushErrMsg("Add audio failed: " + data.message);
+    });
+
+    socket.on("audio-add-canceled", function(data) {
+        if (data.file !== filePath) return;
+        const btn = $("#btn-add-audio");
+        btn.prop("disabled", false).find(".spinner-border").hide();
     });
 }
 

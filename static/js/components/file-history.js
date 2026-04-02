@@ -136,6 +136,12 @@ $(document).ready(function() {
         pushErrMsg(`Restore failed: ${data.message}`);
     });
 
+    socket.on("restore-canceled", function(data) {
+        const btn = $(`.restore-btn[data-operation-id="${data.operation_id}"]`);
+        btn.prop("disabled", false).find(".spinner-border").hide();
+        $(`.restore-progress[data-operation-id="${data.operation_id}"]`).hide();
+    });
+
     let pendingDeleteBackupId = null;
     const deleteBackupModal = new bootstrap.Modal(document.getElementById("confirm-delete-backup"));
 

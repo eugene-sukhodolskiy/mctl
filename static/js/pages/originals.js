@@ -114,6 +114,10 @@ $(document).ready(function() {
         pushErrMsg("Restore failed: " + data.message);
     });
 
+    socket.on("restore-canceled", function() {
+        progressModal.hide();
+    });
+
     // — Delete —
     let pendingDeleteBtn = null;
     const deleteModal = new bootstrap.Modal(document.getElementById("confirm-delete-original"));
