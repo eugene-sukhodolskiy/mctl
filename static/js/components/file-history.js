@@ -110,9 +110,41 @@ $(document).ready(function() {
         loadFileHistory(mediaInfo.path);
     }
 
+    function setRestoreActionsVisible(visible) {
+        $(".restore-btn, .delete-backup-btn").toggle(visible);
+    }
+
+    // Hide restore/delete-backup buttons while transcoding is active
+    if (typeof mediaInfo !== "undefined") {
+        $.getJSON("/file-status?path=" + encodeURIComponent(mediaInfo.path), function(data) {
+            if (data.transcoding) setRestoreActionsVisible(false);
+        });
+    }
+
+    socket.on("copy-progress", function(data) {
+        if (typeof mediaInfo !== "undefined" && data.file === mediaInfo.path) {
+            setRestoreActionsVisible(false);
+        }
+    });
+    socket.on("progress", function(data) {
+        if (typeof mediaInfo !== "undefined" && data.task.file === mediaInfo.path) {
+            setRestoreActionsVisible(false);
+        }
+    });
+
     socket.on("completed", function(data) {
         if (typeof mediaInfo !== "undefined" && data.task.file === mediaInfo.path) {
-            loadFileHistory(mediaInfo.path);
+            loadFileHistory(mediaInfo.path); // re-renders history, buttons appear naturally
+        }
+    });
+    socket.on("error", function(data) {
+        if (typeof mediaInfo !== "undefined" && data.task.file === mediaInfo.path) {
+            setRestoreActionsVisible(true);
+        }
+    });
+    socket.on("canceled", function(data) {
+        if (typeof mediaInfo !== "undefined" && data.task.file === mediaInfo.path) {
+            setRestoreActionsVisible(true);
         }
     });
 
@@ -134,6 +166,12 @@ $(document).ready(function() {
         btn.prop("disabled", false).find(".spinner-border").hide();
         $(`.restore-progress[data-operation-id="${data.operation_id}"]`).hide();
         pushErrMsg(`Restore failed: ${data.message}`);
+    });
+
+    socket.on("restore-canceled", function(data) {
+        const btn = $(`.restore-btn[data-operation-id="${data.operation_id}"]`);
+        btn.prop("disabled", false).find(".spinner-border").hide();
+        $(`.restore-progress[data-operation-id="${data.operation_id}"]`).hide();
     });
 
     let pendingDeleteBackupId = null;

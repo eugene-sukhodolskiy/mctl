@@ -103,12 +103,15 @@ function renderMediaList(data) {
 			`;
 
 			const pathEncoded = encodeURIComponent(file.path);
+			const transcodedBadge = file.transcoded
+				? `<span class="badge-transcoded" title="transcoded"><i class="bi bi-check-circle-fill"></i> transcoded</span>`
+				: '';
 
 			tableBody.append(`
-				<tr>
+				<tr data-file-id="${file.id}">
 					<td>${index + 1}</td>
 					<td>
-						<div class="filename"><a href="/single?path=${pathEncoded}">${file.name}</a></div>
+						<div class="filename"><a href="/single?id=${file.id}">${file.name}</a>${transcodedBadge}<span class="file-status-labels"></span></div>
 						<div class="filepath">${file.path}</div>
 						<div class="filedetails">${details}</div>
 					</td>
@@ -178,10 +181,75 @@ function initScaningProcessingView() {
 	});
 }
 
+function getFileRow(fileId) {
+	return $(`tr[data-file-id="${fileId}"]`);
+}
+
+function addFileLabel(fileId, key, text, variant) {
+	if (!fileId) return;
+	const container = getFileRow(fileId).find('.file-status-labels');
+	if (!container.length || container.find(`[data-label-key="${key}"]`).length) return;
+	container.append(`<span class="file-op-label file-op-label--${variant}" data-label-key="${key}">${text}</span>`);
+}
+
+function removeFileLabel(fileId, key) {
+	if (!fileId) return;
+	getFileRow(fileId).find(`.file-status-labels [data-label-key="${key}"]`).remove();
+}
+
+function initFileStatusLabels() {
+	socket.on("copy-progress", function(data) {
+		addFileLabel(data.file_id, 'copy', 'copying', 'muted');
+	});
+
+	socket.on("progress", function(data) {
+		const id = data.task.file_id;
+		removeFileLabel(id, 'copy');
+		addFileLabel(id, 'transcode', 'transcoding', 'yellow');
+	});
+
+	["completed", "error", "canceled"].forEach(function(evt) {
+		socket.on(evt, function(data) {
+			const id = data.task.file_id;
+			removeFileLabel(id, 'copy');
+			removeFileLabel(id, 'transcode');
+		});
+	});
+
+	socket.on("restore-progress", function(data) {
+		addFileLabel(data.file_id, 'restore', 'restoring', 'purple');
+	});
+	["restore-completed", "restore-error", "restore-canceled"].forEach(function(evt) {
+		socket.on(evt, function(data) { removeFileLabel(data.file_id, 'restore'); });
+	});
+
+	socket.on("audio-extract-progress", function(data) {
+		addFileLabel(data.file_id, 'audio-extract', 'extracting audio', 'cyan');
+	});
+	["audio-extract-completed", "audio-extract-error", "audio-extract-canceled"].forEach(function(evt) {
+		socket.on(evt, function(data) { removeFileLabel(data.file_id, 'audio-extract'); });
+	});
+
+	socket.on("audio-remove-progress", function(data) {
+		addFileLabel(data.file_id, 'audio-remove', 'removing audio', 'red');
+	});
+	["audio-remove-completed", "audio-remove-error", "audio-remove-canceled"].forEach(function(evt) {
+		socket.on(evt, function(data) { removeFileLabel(data.file_id, 'audio-remove'); });
+	});
+
+	socket.on("audio-add-progress", function(data) {
+		addFileLabel(data.file_id, 'audio-add', 'adding audio', 'green');
+	});
+	["audio-add-completed", "audio-add-error", "audio-add-canceled"].forEach(function(evt) {
+		socket.on(evt, function(data) { removeFileLabel(data.file_id, 'audio-add'); });
+	});
+}
+
 $(document).ready(function() {
 	loadMediaList();
 	rescanMediaLibHandler();
 	initScaningProcessingView();
+	initFileStatusLabels();
 
 	socket.on("medialib-scaning-complete", resp => {
 		if($('#media-table_wrapper').length) {

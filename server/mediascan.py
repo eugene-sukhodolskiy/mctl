@@ -2,8 +2,8 @@ import os
 import json
 import ffmpeg
 import subprocess
-from db import upsert_file, get_all_files
-from notifications import notify
+from .db import upsert_file, get_all_files, get_transcoded_file_ids, get_file_by_id
+from .notifications import notify
 
 
 def load_config(config_file):
@@ -158,8 +158,28 @@ def human_readable_size(size_bytes):
         return [f"{size_bytes / 1024**3:.2f}", "GB", f"{size_bytes}"]
 
 
+def get_single_media_by_id(file_id):
+    db_file = get_file_by_id(file_id)
+    if not db_file:
+        return None
+    path = db_file['path']
+    if not os.path.exists(path):
+        return None
+    media_info = get_media_info_with_ffprobe(path)
+    size, size_unit, size_bytes = human_readable_size(os.path.getsize(path))
+    return {
+        "id": db_file["id"],
+        "path": path,
+        "name": db_file["name"],
+        "size_bytes": size_bytes,
+        "size": size,
+        "size_unit": size_unit,
+        "info": media_info
+    }
+
+
 def get_single_media_by_path(path):
-    from db import get_file_by_path
+    from .db import get_file_by_path
     if not os.path.exists(path):
         return None
     media_info = get_media_info_with_ffprobe(path)
@@ -182,18 +202,21 @@ def get_media_from_db():
     rows = get_all_files()
     if not rows:
         return None
+    transcoded_ids = get_transcoded_file_ids()
     files = []
     for row in rows:
         media_info = json.loads(row["media_info"]) if row["media_info"] else {"error": "No info"}
         size_bytes = row["size_bytes"] or 0
         size, size_unit, size_bytes_str = human_readable_size(size_bytes)
         files.append({
+            "id": row["id"],
             "path": row["path"],
             "name": row["name"],
             "size": size,
             "size_unit": size_unit,
             "size_bytes": size_bytes_str,
-            "info": media_info
+            "info": media_info,
+            "transcoded": row["id"] in transcoded_ids,
         })
     return files
 

@@ -1,12 +1,24 @@
 {% include "partials/head.html" %}
 
-<script>
-    const mediaInfo = JSON.parse("{{ file }}".replaceAll("&#39;", '"').replaceAll("&#34;", "'"));
-</script>
+<script>const mediaInfo = {{ file | tojson }};</script>
 
 <div class="container mt-2" id="page-single">
-    <h1 class="mb-3">{{ file.name }}</h1>
-    <p class="text-muted">Path: {{ file.path }}</p>
+    <div class="file-title-row mb-3">
+        <div class="file-title-display" id="file-title-display">
+            <h1 class="file-title" id="btn-rename-file" title="click to rename">{{ file.name }}</h1>
+        </div>
+        <div class="file-title-edit" id="file-title-edit" style="display:none">
+            <input type="text" class="form-control file-title-input" id="file-title-input" value="{{ file.name }}">
+            <button class="btn btn-outline-secondary" id="file-title-confirm" title="confirm rename">
+                <span class="spinner-border spinner-border-sm" style="display:none"></span>
+                <i class="bi bi-arrow-right"></i>
+            </button>
+            <button class="btn btn-outline-secondary" id="file-title-cancel" title="cancel">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+    </div>
+    <p class="text-muted" id="file-path-display">Path: {{ file.path }}</p>
     <div class="d-flex align-items-center gap-2 mb-4">
         <a href="/" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> back</a>
         <button class="btn btn-outline-secondary ms-auto d-inline-flex align-items-center gap-1" id="btn-delete-file" title="delete file">
@@ -37,10 +49,13 @@
             <h2 class="h5 mb-0">// container</h2>
         </div>
         <div class="card-body">
+            {% if file.info and file.info.container %}
             <p><strong>Bitrate:</strong> {{ file.info.container.bitrate }}</p>
             <p><strong>Duration:</strong> <span class="duration-to-minutes" data-duration-in-seconds="{{ file.info.container.duration }}"></span></p>
             <p><strong>Size:</strong> {{ file.info.container.size }}</p>
-            
+            {% else %}
+            <p class="text-muted">Media info unavailable</p>
+            {% endif %}
             {% include "components/single-transcoding.html" %}
         </div>
     </div>
@@ -60,7 +75,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for video in file.info.video %}
+                    {% for video in file.info.video if file.info %}
                     <tr>
                         <td>{{ video.codec }}</td>
                         <td>{{ video.resolution }}</td>
@@ -91,7 +106,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for audio in file.info.audio %}
+                    {% for audio in file.info.audio if file.info %}
                     <tr data-track-index="{{ loop.index0 }}"
                         data-track-codec="{{ audio.codec }}"
                         data-track-title="{{ audio.title }}"
@@ -105,14 +120,18 @@
                         <td>{{ audio.language }}</td>
                         <td>{{ audio.layout }}</td>
                         <td class="audio-actions">
-                            <button class="btn btn-outline-secondary btn-sm btn-extract-audio" title="extract">
-                                <span class="spinner-border spinner-border-sm" style="display:none"></span>
-                                <i class="bi bi-box-arrow-up"></i>
-                            </button>
-                            <button class="btn btn-outline-secondary btn-sm btn-remove-audio ms-1" title="remove from video">
-                                <span class="spinner-border spinner-border-sm" style="display:none"></span>
-                                <i class="bi bi-trash"></i>
-                            </button>
+                            <div class="audio-op-buttons d-flex align-items-center">
+                                <button class="btn btn-outline-secondary btn-sm btn-extract-audio" title="extract">
+                                    <i class="bi bi-box-arrow-up"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm btn-remove-audio ms-1" title="remove from video">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            <div class="audio-op-progress d-none align-items-center gap-2">
+                                <div class="circle-progress-bar" data-value="0" data-bar-color="#7aa2f7" data-bar-stroke="3" data-bar-size="30"></div>
+                                <small class="text-muted audio-op-percent">0%</small>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -227,9 +246,12 @@
                     <option value="">loading...</option>
                 </select>
                 <button class="btn btn-outline-secondary d-inline-flex align-items-center gap-1" id="btn-add-audio" disabled>
-                    <span class="spinner-border spinner-border-sm" style="display:none"></span>
                     add
                 </button>
+                <div id="add-audio-progress" class="d-none align-items-center gap-2">
+                    <div class="circle-progress-bar" data-value="0" data-bar-color="#9ece6a" data-bar-stroke="3" data-bar-size="30"></div>
+                    <small class="text-muted" id="add-audio-progress-label">0%</small>
+                </div>
             </div>
         </div>
     </div>
@@ -250,47 +272,5 @@
 
 <script src="/static/js/components/thumbnails.js" defer></script>
 <script src="/static/js/components/audio-controls.js" defer></script>
-<script>
-$(document).ready(function() {
-    const deleteFileModal = new bootstrap.Modal(document.getElementById("confirm-delete-file"));
-
-    let deleteFileLocked = false;
-    $.getJSON("/file-status?path=" + encodeURIComponent(mediaInfo.path), function(data) {
-        deleteFileLocked = data.transcoding;
-    });
-    socket.on("progress", function(data) { if (data.task.file === mediaInfo.path) deleteFileLocked = true; });
-    socket.on("copy-progress", function(data) { if (data.file === mediaInfo.path) deleteFileLocked = true; });
-    socket.on("completed", function(data) { if (data.task.file === mediaInfo.path) deleteFileLocked = false; });
-    socket.on("error", function(data) { if (data.task.file === mediaInfo.path) deleteFileLocked = false; });
-    socket.on("canceled", function(data) { if (data.task.file === mediaInfo.path) deleteFileLocked = false; });
-
-    $("#btn-delete-file").on("click", function() {
-        if (deleteFileLocked) {
-            pushInfoMsg("Cannot delete file while transcoding is in progress.");
-            return;
-        }
-        deleteFileModal.show();
-    });
-
-    $("#confirm-delete-file-btn").on("click", function() {
-        const btn = $(this);
-        btn.prop("disabled", true).find(".spinner-border").show();
-
-        $.ajax({
-            url: "/delete-file",
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({ path: mediaInfo.path }),
-            success: function() {
-                window.location.href = "/";
-            },
-            error: function(xhr) {
-                btn.prop("disabled", false).find(".spinner-border").hide();
-                deleteFileModal.hide();
-                pushErrMsg("Delete failed: " + (xhr.responseJSON?.error || "unknown error"));
-            }
-        });
-    });
-});
-</script>
+<script src="/static/js/pages/single.js" defer></script>
 {% include "partials/footer.html" %}

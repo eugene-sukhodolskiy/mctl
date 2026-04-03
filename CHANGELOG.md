@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-04-03
+
+### Added
+
+- **Process center** — unified real-time progress page for all background operations (transcoding, audio, restore, scan) with per-task progress bar and cancel button
+- **File rename** on the single-file page; title is now directly clickable to enter edit mode
+- **Transcoded badge** in the media list for files that have already been processed
+- **Real-time status labels** on media list rows reflecting the current operation in progress
+- **File permission checks** before starting any operation; clear error notification when source file is not writable
+- **Version display** in footer and on auth pages
+- **Media library link** in navbar for quick access from any page
+- **Alembic migrations** for schema management; `alembic upgrade head` runs automatically on startup
+
+### Changed
+
+- Audio progress indicators replaced with compact inline radial progress rings
+- Toast notifications are now larger and support long wrapping text
+- Buttons for restore and delete-backup are hidden while transcoding is active on that file
+- Cancelled operations now correctly restore UI state for audio and restore controls
+
+### Fixed
+
+- 500 error on `/single` when file is missing or media info is unavailable
+- Single-file page and process center links now use `file_id` instead of path (fixes lookups after rename/move)
+- File rename inline layout broken after Bootstrap show() refactor
+
 ## [0.1.0] - 2026-04-01
 
 Initial public release.

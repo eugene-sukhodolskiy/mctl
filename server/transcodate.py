@@ -1,10 +1,10 @@
 import subprocess
 import os
 import glob
-from db import update_operation, update_file_media_info, get_operation_by_id, mark_backup_deleted, get_file_by_path, calculate_and_save_stats
-from mediascan import get_media_info_with_ffprobe
-from thumbnails import invalidate_thumbs
-from notifications import notify
+from .db import update_operation, update_file_media_info, get_operation_by_id, mark_backup_deleted, get_file_by_path, calculate_and_save_stats
+from .mediascan import get_media_info_with_ffprobe
+from .thumbnails import invalidate_thumbs
+from .notifications import notify
 
 
 def detect_available_accelerators():
@@ -256,6 +256,7 @@ def _run_ffmpeg_process(command, task, socketio, watch_cuda_error=False):
                 "task": {
                     "id": task["id"],
                     "file": task["file"],
+                    "file_id": task.get("file_id"),
                     "command": task["command"]
                 },
                 "message": line.strip()
@@ -265,7 +266,7 @@ def _run_ffmpeg_process(command, task, socketio, watch_cuda_error=False):
     return process, output_tail, cuda_error_detected
 
 
-def _copy_with_progress(src, dst, file_path, socketio, chunk_size=2 * 1024 * 1024):
+def _copy_with_progress(src, dst, file_path, socketio, file_id=None, chunk_size=2 * 1024 * 1024):
     total = os.path.getsize(src)
     copied = 0
     with open(src, 'rb') as fsrc, open(dst, 'wb') as fdst:
@@ -276,16 +277,16 @@ def _copy_with_progress(src, dst, file_path, socketio, chunk_size=2 * 1024 * 102
             fdst.write(buf)
             copied += len(buf)
             percent = int(copied / total * 100)
-            socketio.emit('copy-progress', {'file': file_path, 'percent': percent})
+            socketio.emit('copy-progress', {'file': file_path, 'file_id': file_id, 'percent': percent})
             socketio.sleep(0)  # yield to gevent event loop — file I/O is not patched by gevent
 
 
-def transcode_file(transcoding_tasks, socketio, file_path, dest_path, acceleration, codec, resolution, crf, preset, cpu_used, operation_id=None, delete_original=False, user_id=None):
+def transcode_file(transcoding_tasks, socketio, file_path, dest_path, acceleration, codec, resolution, crf, preset, cpu_used, operation_id=None, delete_original=False, user_id=None, file_id=None):
     # Phase 1: copy original to backup location
     if dest_path:
         os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-        socketio.emit('copy-progress', {'file': file_path, 'percent': 0})
-        _copy_with_progress(file_path, dest_path, file_path, socketio)
+        socketio.emit('copy-progress', {'file': file_path, 'file_id': file_id, 'percent': 0})
+        _copy_with_progress(file_path, dest_path, file_path, socketio, file_id=file_id)
 
     base, ext = os.path.splitext(file_path)
     output_file = base + '_transcoded' + ext
@@ -309,6 +310,7 @@ def transcode_file(transcoding_tasks, socketio, file_path, dest_path, accelerati
     task = {
         "id": "id_" + str(len(transcoding_tasks) + 1),
         "file": file_path,
+        "file_id": file_id,
         "output": output_file,
         "command": command,
         "process": None
@@ -327,7 +329,7 @@ def transcode_file(transcoding_tasks, socketio, file_path, dest_path, accelerati
 
         print("NVENC CUDA filter error detected — retrying with CPU-assisted scaling")
         socketio.emit('progress', {
-            "task": {"id": task["id"], "file": task["file"], "command": fallback_command},
+            "task": {"id": task["id"], "file": task["file"], "file_id": task.get("file_id"), "command": fallback_command},
             "message": "CUDA pipeline failed — retrying with CPU-assisted scaling..."
         })
         task["command"] = fallback_command
@@ -362,6 +364,7 @@ def transcode_file(transcoding_tasks, socketio, file_path, dest_path, accelerati
             "task": {
                 "id": task["id"],
                 "file": task["file"],
+                "file_id": task.get("file_id"),
                 "command": task["command"]
             },
             "message": f"File {file_path} transcoded successfully",
@@ -379,6 +382,7 @@ def transcode_file(transcoding_tasks, socketio, file_path, dest_path, accelerati
                 "task": {
                     "id": task["id"],
                     "file": task["file"],
+                    "file_id": task.get("file_id"),
                     "command": task["command"]
                 },
                 "message": f"Transcoding failed for {file_path}",
@@ -392,6 +396,7 @@ def transcode_file(transcoding_tasks, socketio, file_path, dest_path, accelerati
                 "task": {
                     "id": task["id"],
                     "file": task["file"],
+                    "file_id": task.get("file_id"),
                     "command": task["command"]
                 },
                 "message": f"Transcoding canceled for {file_path}"

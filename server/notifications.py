@@ -1,5 +1,5 @@
 from datetime import datetime
-from db import create_notification
+from .db import create_notification
 
 
 def notify(socketio, user_id, notif_type, title, message=None):

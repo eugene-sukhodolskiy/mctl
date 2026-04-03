@@ -1,3 +1,59 @@
+.badge-transcoded {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	margin-left: 8px;
+	font-size: 11px;
+	color: var(--tn-green);
+	opacity: 0.8;
+	vertical-align: middle;
+}
+
+.file-status-labels {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-left: 8px;
+	vertical-align: middle;
+}
+
+.file-op-label {
+	font-size: 10px;
+	letter-spacing: 0.04em;
+	padding: 1px 5px;
+	border-radius: 3px;
+
+	&--muted {
+		color: var(--tn-muted);
+		border: 1px solid var(--tn-border);
+	}
+	&--yellow {
+		color: var(--tn-yellow);
+		border: 1px solid rgba(224, 175, 104, 0.3);
+		background-color: rgba(224, 175, 104, 0.08);
+	}
+	&--purple {
+		color: var(--tn-purple);
+		border: 1px solid rgba(187, 154, 247, 0.3);
+		background-color: rgba(187, 154, 247, 0.08);
+	}
+	&--cyan {
+		color: var(--tn-cyan);
+		border: 1px solid rgba(125, 207, 255, 0.3);
+		background-color: rgba(125, 207, 255, 0.08);
+	}
+	&--red {
+		color: var(--tn-red);
+		border: 1px solid rgba(247, 118, 142, 0.3);
+		background-color: rgba(247, 118, 142, 0.08);
+	}
+	&--green {
+		color: var(--tn-green);
+		border: 1px solid rgba(158, 206, 106, 0.3);
+		background-color: rgba(158, 206, 106, 0.08);
+	}
+}
+
 .component.media-list {
 	.do-rescan-media-lib {
 		.spinner-border {

@@ -1,5 +1,25 @@
 #page-single {
-	#single-transcoding-progress {
-		
+	.file-title-row {
+		.file-title-display {
+			.file-title {
+				margin: 0;
+				cursor: pointer;
+			}
+		}
+
+		.file-title-edit {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+
+			.file-title-input {
+				flex: 1;
+				min-width: 0;
+				font-size: 1.75rem;
+				font-weight: 700;
+				padding: 2px 10px;
+				height: auto;
+			}
+		}
 	}
 }
