@@ -559,12 +559,18 @@ h1, h2, h3, h4, h5, h6 {
   background-color: var(--tn-border);
 }
 
+.footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .footer-version {
   color: var(--tn-muted);
   font-size: 0.72rem;
   letter-spacing: 0.04em;
-  margin-top: 10px;
   opacity: 0.6;
+  margin-left: auto;
 }
 
 // Nav logo

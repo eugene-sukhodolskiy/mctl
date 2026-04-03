@@ -1,25 +1,27 @@
 <footer class="footer mt-5">
     <div class="container">
-        <div class="footer-stats" id="footer-stats" style="display:none">
-            <div class="footer-stat">
-                <i class="bi bi-collection-play footer-stat-icon"></i>
-                <span class="footer-stat-value" id="stat-count">—</span>
-                <span class="footer-stat-label">files transcoded</span>
+        <div class="footer-row">
+            <div class="footer-stats" id="footer-stats" style="display:none">
+                <div class="footer-stat">
+                    <i class="bi bi-collection-play footer-stat-icon"></i>
+                    <span class="footer-stat-value" id="stat-count">—</span>
+                    <span class="footer-stat-label">files transcoded</span>
+                </div>
+                <div class="footer-stat-divider"></div>
+                <div class="footer-stat">
+                    <i class="bi bi-hdd footer-stat-icon"></i>
+                    <span class="footer-stat-value" id="stat-saved">—</span>
+                    <span class="footer-stat-label">saved</span>
+                </div>
+                <div class="footer-stat-divider"></div>
+                <div class="footer-stat">
+                    <i class="bi bi-arrow-down-circle footer-stat-icon"></i>
+                    <span class="footer-stat-value" id="stat-percent">—</span>
+                    <span class="footer-stat-label">avg reduction</span>
+                </div>
             </div>
-            <div class="footer-stat-divider"></div>
-            <div class="footer-stat">
-                <i class="bi bi-hdd footer-stat-icon"></i>
-                <span class="footer-stat-value" id="stat-saved">—</span>
-                <span class="footer-stat-label">saved</span>
-            </div>
-            <div class="footer-stat-divider"></div>
-            <div class="footer-stat">
-                <i class="bi bi-arrow-down-circle footer-stat-icon"></i>
-                <span class="footer-stat-value" id="stat-percent">—</span>
-                <span class="footer-stat-label">avg reduction</span>
-            </div>
+            <div class="footer-version">v{{ version }}</div>
         </div>
-        <div class="footer-version">v{{ version }}</div>
     </div>
 </footer>
 
